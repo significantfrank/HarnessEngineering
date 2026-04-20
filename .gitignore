@@ -1,6 +1,7 @@
 # IDE
 .idea/
 .opencode
+target
 
 # Python
 __pycache__/
