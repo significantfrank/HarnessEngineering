@@ -1,6 +1,7 @@
 # IDE
 .idea/
-.opencode
+.opencode/
+.claude/
 target/
 
 # Python
