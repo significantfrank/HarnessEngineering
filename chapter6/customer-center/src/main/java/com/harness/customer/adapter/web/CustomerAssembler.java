@@ -50,6 +50,8 @@ public class CustomerAssembler {
         dto.setAum(customer.getAum());
         dto.setAvailableBalance(customer.getAvailableBalance());
         dto.setTotalReturn(customer.getTotalReturn());
+        dto.setFreezeReason(customer.getFreezeReason());
+        dto.setUnfreezeReason(customer.getUnfreezeReason());
         dto.setHoldingProducts(toHoldingProductDTOList(customer.getHoldingProducts()));
         dto.setCreateTime(customer.getCreateTime());
         dto.setUpdateTime(customer.getUpdateTime());

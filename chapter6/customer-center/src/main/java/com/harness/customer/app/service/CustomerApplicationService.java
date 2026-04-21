@@ -57,6 +57,21 @@ public class CustomerApplicationService {
     }
 
     @Transactional
+    public Customer freezeCustomer(Long id, FreezeReason reason) {
+        Customer customer = getCustomer(id);
+        customer.freezeAccount(reason);
+        return customerGateway.save(customer);
+    }
+
+    @Transactional
+    public Customer unfreezeCustomer(Long id, String reason, String authorizationDocument) {
+        Customer customer = getCustomer(id);
+        customerDomainService.validateUnfreezeAuthorization(customer, authorizationDocument);
+        customer.unfreezeAccount(reason, authorizationDocument);
+        return customerGateway.save(customer);
+    }
+
+    @Transactional
     public void deleteCustomer(Long id) {
         getCustomer(id);
         customerGateway.deleteById(id);

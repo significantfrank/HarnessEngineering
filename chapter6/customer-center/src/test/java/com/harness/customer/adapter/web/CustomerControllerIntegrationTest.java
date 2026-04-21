@@ -1,7 +1,7 @@
 package com.harness.customer.adapter.web;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.harness.customer.domain.entity.CustomerStatus;
+import com.harness.customer.domain.entity.AccountStatus;
 import com.harness.customer.domain.entity.Gender;
 import com.harness.customer.domain.entity.IdType;
 import com.harness.customer.infrastructure.repository.CustomerJpaRepository;
@@ -61,7 +61,7 @@ class CustomerControllerIntegrationTest {
                 .andExpect(jsonPath("$.name", is("张三")))
                 .andExpect(jsonPath("$.idType", is("ID_CARD")))
                 .andExpect(jsonPath("$.idNumber", is("110101199001011234")))
-                .andExpect(jsonPath("$.status", is("ACTIVE")))
+                .andExpect(jsonPath("$.accountStatus", is("NORMAL")))
                 .andExpect(jsonPath("$.createTime", notNullValue()));
     }
 
@@ -172,11 +172,11 @@ class CustomerControllerIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(dto)));
 
-        mockMvc.perform(get("/api/customers").param("status", "ACTIVE"))
+        mockMvc.perform(get("/api/customers").param("accountStatus", "NORMAL"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)));
 
-        mockMvc.perform(get("/api/customers").param("status", "FROZEN"))
+        mockMvc.perform(get("/api/customers").param("accountStatus", "FROZEN"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(0)));
     }

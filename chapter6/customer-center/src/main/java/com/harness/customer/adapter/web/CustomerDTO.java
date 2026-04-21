@@ -59,6 +59,10 @@ public class CustomerDTO {
 
     private BigDecimal totalReturn;
 
+    private FreezeReason freezeReason;
+
+    private String unfreezeReason;
+
     private List<HoldingProductDTO> holdingProducts;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")

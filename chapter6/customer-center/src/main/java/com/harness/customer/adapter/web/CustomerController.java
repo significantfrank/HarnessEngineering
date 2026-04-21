@@ -46,6 +46,18 @@ public class CustomerController {
         return CustomerAssembler.toDTO(updated);
     }
 
+    @PutMapping("/{id}/freeze")
+    public CustomerDTO freeze(@PathVariable Long id, @Valid @RequestBody FreezeRequestDTO request) {
+        Customer customer = customerApplicationService.freezeCustomer(id, request.getReason());
+        return CustomerAssembler.toDTO(customer);
+    }
+
+    @PutMapping("/{id}/unfreeze")
+    public CustomerDTO unfreeze(@PathVariable Long id, @Valid @RequestBody UnfreezeRequestDTO request) {
+        Customer customer = customerApplicationService.unfreezeCustomer(id, request.getReason(), request.getAuthorizationDocument());
+        return CustomerAssembler.toDTO(customer);
+    }
+
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable Long id) {

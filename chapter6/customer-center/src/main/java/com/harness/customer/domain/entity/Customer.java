@@ -85,6 +85,16 @@ public class Customer {
     @Column(columnDefinition = "TEXT")
     private List<HoldingProduct> holdingProducts = new ArrayList<>();
 
+    @Enumerated(EnumType.STRING)
+    @Column(length = 24)
+    private FreezeReason freezeReason;
+
+    @Column(length = 256)
+    private String unfreezeReason;
+
+    @Column(length = 128)
+    private String unfreezeAuthorization;
+
     @Column(updatable = false)
     private LocalDateTime createTime;
 
@@ -108,8 +118,27 @@ public class Customer {
         this.accountStatus = AccountStatus.NORMAL;
     }
 
-    public void freezeAccount() {
+    public void freezeAccount(FreezeReason reason) {
+        if (this.accountStatus == AccountStatus.CANCELLED) {
+            throw new IllegalStateException("Cancelled account cannot be frozen");
+        }
+        if (this.accountStatus == AccountStatus.FROZEN) {
+            throw new IllegalStateException("Account is already frozen");
+        }
         this.accountStatus = AccountStatus.FROZEN;
+        this.freezeReason = reason;
+        this.unfreezeReason = null;
+        this.unfreezeAuthorization = null;
+    }
+
+    public void unfreezeAccount(String reason, String authorizationDocument) {
+        if (this.accountStatus != AccountStatus.FROZEN) {
+            throw new IllegalStateException("Only frozen account can be unfrozen");
+        }
+        this.accountStatus = AccountStatus.NORMAL;
+        this.unfreezeReason = reason;
+        this.unfreezeAuthorization = authorizationDocument;
+        this.freezeReason = null;
     }
 
     public void cancelAccount() {
