@@ -5,5 +5,9 @@
 本次迭代以搭建框架为主，只实现customer的简单CRUD
 ```
 
+# 补充测试防护
+```
+补充后端继承测试，使用SpringBootTest从controller开始测试，测试用h2内存数据库，每个API一个测试用例
+```
 
 

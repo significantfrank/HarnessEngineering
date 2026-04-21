@@ -1,0 +1,17 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:crm;DB_CLOSE_DELAY=-1;MODE=MYSQL
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        globally_quoted_identifiers: false
+  h2:
+    console:
+      enabled: false
