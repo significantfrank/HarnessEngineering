@@ -1,7 +1,7 @@
 # IDE
 .idea/
 .opencode
-target
+target/
 
 # Python
 __pycache__/

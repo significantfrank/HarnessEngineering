@@ -18,7 +18,7 @@
     <description>Customer master data service for bank B2C</description>
 
     <properties>
-        <java.version>17</java.version>
+        <java.version>21</java.version>
     </properties>
 
     <dependencies>
