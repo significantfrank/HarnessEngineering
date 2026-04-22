@@ -3,7 +3,7 @@ spring:
     active: dev
   jpa:
     hibernate:
-      ddl-auto: true
+      ddl-auto: update
     show-sql: true
     properties:
       hibernate:

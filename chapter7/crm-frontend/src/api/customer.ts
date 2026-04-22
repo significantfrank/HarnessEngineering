@@ -1,5 +1,6 @@
 import request from './request'
-import type { Customer, CustomerQuery, PageResult, ApiResponse } from '@/types/customer'
+import type { Customer, CustomerQuery } from '@/types/customer'
+import type { PageResult, ApiResponse } from '@/types/common'
 
 export function getCustomers(params: CustomerQuery): Promise<ApiResponse<PageResult<Customer>>> {
   return request.get('/api/customers', { params })

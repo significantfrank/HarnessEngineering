@@ -5,7 +5,7 @@ import com.harness.crm.domain.customer.entity.CustomerEntity;
 import com.harness.crm.domain.customer.enums.CustomerLevel;
 import com.harness.crm.domain.customer.enums.CustomerSource;
 import com.harness.crm.domain.customer.enums.CustomerStatus;
-import com.harness.crm.domain.customer.service.CustomerDomainService;
+import com.harness.crm.domain.customer.gateway.CustomerGatewayI;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -15,35 +15,37 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class CustomerService {
 
-    private final CustomerDomainService customerDomainService;
+    private final CustomerGatewayI customerGateway;
 
     public CustomerDTO create(CustomerDTO dto) {
         CustomerEntity entity = toEntity(dto);
-        CustomerEntity saved = customerDomainService.create(entity);
+        entity.prePersist();
+        CustomerEntity saved = customerGateway.save(entity);
         return toDTO(saved);
     }
 
     public CustomerDTO update(Long id, CustomerDTO dto) {
-        CustomerEntity existing = customerDomainService.findById(id)
+        CustomerEntity existing = customerGateway.findById(id)
                 .orElseThrow(() -> new RuntimeException("Customer not found: " + id));
         updateEntity(existing, dto);
-        CustomerEntity saved = customerDomainService.update(existing);
+        existing.preUpdate();
+        CustomerEntity saved = customerGateway.save(existing);
         return toDTO(saved);
     }
 
     public CustomerDTO findById(Long id) {
-        CustomerEntity entity = customerDomainService.findById(id)
+        CustomerEntity entity = customerGateway.findById(id)
                 .orElseThrow(() -> new RuntimeException("Customer not found: " + id));
         return toDTO(entity);
     }
 
     public Page<CustomerDTO> findByConditions(String name, CustomerStatus status, CustomerSource source, CustomerLevel level, int page, int size) {
-        Page<CustomerEntity> entityPage = customerDomainService.findByConditions(name, status, source, level, PageRequest.of(page, size));
+        Page<CustomerEntity> entityPage = customerGateway.findByConditions(name, status, source, level, PageRequest.of(page, size));
         return entityPage.map(this::toDTO);
     }
 
     public void deleteById(Long id) {
-        customerDomainService.deleteById(id);
+        customerGateway.deleteById(id);
     }
 
     private CustomerEntity toEntity(CustomerDTO dto) {

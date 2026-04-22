@@ -1,45 +1,73 @@
 # AGENTS.md
 
 ## Project Layout
-This is a  CRM project
+This is a CRM project，Using COLA by Packages Architecture。
+前端代码在crm-frontend, 后端代码在crm-backend
 
-## 编码要求务必遵守
+## 编码规范务必遵守
 1. 核心业务代码必须添加中文注释
-2. 后端代码改动必须执行单元测试，且确保全部通过
+2. 默认不要在DomainService写代码，让app直接操作gateway去完成CRUD，除非很有必要，征求我同意后可添加
+3. 原子的业务逻辑，要沉淀封装在领域对象中。 例如`OrderService`上的方法`generateOrderNo()`和`isTerminal()`
+就应该被封装在`LeadEntity`领域对象内，而不是在app层。
 
-## Commands
-### crm-backend
-```bash
-mvn compile              # Compile
-mvn spring-boot:run      # Dev server on port 8080
-mvn test                 # Run tests (none exist yet)
+## 测试要求务必遵守
+1. 后端单元测试参考`CustomerControllerIntegrationTest`, 不要在App层和DomainService上做测试
+2. 每一个业务功能最多写2个TestCase，一个Happy Case，一个Bad Case
+3. 后端代码改动必须执行单元测试，且确保全部通过
+
+## Codebase Structure
+这是我们的Codebase Structure，你可以信任这个结构，如果发现codebase何其不一致，请及时更新。
+crm-frontend
 ```
-No Maven wrapper (`mvnw`) is checked in. Requires global Maven.
-
-### crm-frontend
-```bash
-npm run dev              # Vite dev server on port 5173
-npm run build            # vue-tsc typecheck then vite build (no separate lint/typecheck script)
+crm-frontend/
+├── dist/
+│   └── assets/
+└── src/
+    ├── api/
+    ├── assets/
+    ├── components/
+    ├── router/
+    ├── stores/
+    ├── types/
+    ├── utils/
+    └── views/
+        ├── customer/
+        ├── lead/
+        ├── opportunity/
+        └── order/
 ```
-No ESLint or Prettier is configured.
 
-### Database
-MySQL must be running at `localhost:3306`. Initialize with:
-```bash
-mysql -u root -proot < crm-backend/src/main/resources/db/schema.sql
+crm-backend:
 ```
-Dev credentials: `root`/`root`, database: `crm`.
-
-## Architecture: COLA by Packages (Not Modules)
-
-Single Maven module with package-level layering under `com.harness.crm`:
-
-| Package | Role |
-|---|---|
-| `adapter/web` | REST controllers + `common/ApiResponse`, `common/GlobalExceptionHandler` |
-| `app/customer` | `CustomerService` (concrete class, no interface) + `dto/CustomerDTO` |
-| `domain/customer` | `entity/CustomerEntity`, `enums/`, `gateway/CustomerGatewayI`, `service/CustomerDomainService` |
-| `infrastructure/customer` | `gateway/CustomerGatewayImpl`, `repository/CustomerRepository` |
+crm-backend/
+└── src/
+├── main/
+│   ├── java/com/harness/crm/
+│   │   ├── adapter/web/
+│   │   │   └── common/
+│   │   ├── app/
+│   │   │   ├── customer/dto/
+│   │   │   ├── lead/dto/
+│   │   │   ├── opportunity/dto/
+│   │   │   └── order/dto/
+│   │   ├── domain/
+│   │   │   ├── customer/{entity, enums, gateway, service}/
+│   │   │   ├── lead/{entity, enums, gateway, service}/
+│   │   │   ├── opportunity/{entity, enums, gateway, service}/
+│   │   │   └── order/{entity, enums, gateway, service}/
+│   │   └── infrastructure/
+│   │       ├── customer/{gateway, repository}/
+│   │       ├── lead/{gateway, repository}/
+│   │       ├── opportunity/{gateway, repository}/
+│   │       └── order/{gateway, repository}/
+│   └── resources/db/
+└── test/
+├── java/com/harness/crm/
+│   ├── adapter/web/
+│   ├── app/{lead, opportunity, order}/
+│   └── domain/{lead, opportunity, order}/service/
+└── resources/
+```
 
 Key decisions:
 - **Entity = JPA entity**: `CustomerEntity` has `@Entity` directly, no separate DO layer
@@ -60,3 +88,10 @@ Key decisions:
 - Vite proxies `/api` → `http://localhost:8080` in dev
 - Axios interceptor unwraps `ApiResponse`: checks `code !== '200'` and returns `res` (so `res.data` is the payload)
 - Page index sent to backend is 0-based; displayed as 1-based in Ant Design table
+
+## Database
+MySQL must be running at `localhost:3306`. Initialize with:
+```bash
+mysql -u root -proot < crm-backend/src/main/resources/db/schema.sql
+```
+Dev credentials: `root`/`root`, database: `crm`.

@@ -5,7 +5,37 @@ const router = createRouter({
   routes: [
     {
       path: '/',
-      redirect: '/customers',
+      redirect: '/leads',
+    },
+    {
+      path: '/leads',
+      name: 'LeadList',
+      component: () => import('@/views/lead/LeadList.vue'),
+    },
+    {
+      path: '/opportunities',
+      name: 'OppKanban',
+      component: () => import('@/views/opportunity/OppKanban.vue'),
+    },
+    {
+      path: '/opportunities/list',
+      name: 'OppList',
+      component: () => import('@/views/opportunity/OppList.vue'),
+    },
+    {
+      path: '/opportunities/:id',
+      name: 'OppDetail',
+      component: () => import('@/views/opportunity/OppDetail.vue'),
+    },
+    {
+      path: '/orders',
+      name: 'OrderList',
+      component: () => import('@/views/order/OrderList.vue'),
+    },
+    {
+      path: '/orders/:id',
+      name: 'OrderDetail',
+      component: () => import('@/views/order/OrderDetail.vue'),
     },
     {
       path: '/customers',
