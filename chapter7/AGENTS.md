@@ -1,32 +1,29 @@
 # AGENTS.md
 
 ## Project Layout
-
 This is a  CRM project
 
+## 编码要求务必遵守
+1. 核心业务代码必须添加中文注释
+2. 后端代码改动必须执行单元测试，且确保全部通过
+
 ## Commands
-
 ### crm-backend
-
 ```bash
 mvn compile              # Compile
 mvn spring-boot:run      # Dev server on port 8080
 mvn test                 # Run tests (none exist yet)
 ```
-
 No Maven wrapper (`mvnw`) is checked in. Requires global Maven.
 
 ### crm-frontend
-
 ```bash
 npm run dev              # Vite dev server on port 5173
 npm run build            # vue-tsc typecheck then vite build (no separate lint/typecheck script)
 ```
-
 No ESLint or Prettier is configured.
 
 ### Database
-
 MySQL must be running at `localhost:3306`. Initialize with:
 ```bash
 mysql -u root -proot < crm-backend/src/main/resources/db/schema.sql
@@ -60,7 +57,6 @@ Key decisions:
 - Pagination is 0-based (Spring Data default)
 
 ## Frontend-Backend Integration
-
 - Vite proxies `/api` → `http://localhost:8080` in dev
 - Axios interceptor unwraps `ApiResponse`: checks `code !== '200'` and returns `res` (so `res.data` is the payload)
 - Page index sent to backend is 0-based; displayed as 1-based in Ant Design table
