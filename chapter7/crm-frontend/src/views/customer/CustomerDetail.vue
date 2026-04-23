@@ -17,8 +17,14 @@
           <a-descriptions-item label="邮箱">{{ customer.email || '-' }}</a-descriptions-item>
           <a-descriptions-item label="公司">{{ customer.company || '-' }}</a-descriptions-item>
           <a-descriptions-item label="行业">{{ customer.industry || '-' }}</a-descriptions-item>
-          <a-descriptions-item label="来源">{{ sourceMap[customer.source] || '-' }}</a-descriptions-item>
-          <a-descriptions-item label="等级">{{ levelMap[customer.level] || '-' }}</a-descriptions-item>
+          <a-descriptions-item label="来源">{{ sourceMap[customer.source ?? ''] || '-' }}</a-descriptions-item>
+          <a-descriptions-item label="等级">{{ levelMap[customer.level ?? ''] || '-' }}</a-descriptions-item>
+          <a-descriptions-item label="标签" :span="2">
+            <div style="display: flex; align-items: center; gap: 4px; flex-wrap: wrap">
+              <a-tag v-for="tag in (customer.tags || [])" :key="tag.id" :color="tag.color">{{ tag.name }}</a-tag>
+              <span v-if="!customer.tags || customer.tags.length === 0" style="color: #999">-</span>
+            </div>
+          </a-descriptions-item>
           <a-descriptions-item label="地址" :span="2">{{ customer.address || '-' }}</a-descriptions-item>
           <a-descriptions-item label="最后跟进">{{ customer.lastFollowUp || '-' }}</a-descriptions-item>
           <a-descriptions-item label="创建时间">{{ customer.createTime || '-' }}</a-descriptions-item>

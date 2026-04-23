@@ -3,6 +3,15 @@ export type CustomerLevel = 'VIP' | 'IMPORTANT' | 'NORMAL' | 'POTENTIAL'
 export type CustomerStatus = 'ACTIVE' | 'INACTIVE' | 'LOST'
 export type NoteCategory = 'PHONE_CALL' | 'VISIT' | 'EMAIL' | 'WECHAT' | 'OTHER'
 
+export interface Tag {
+  id?: number
+  name: string
+  color: string
+  customerCount?: number
+  createTime?: string
+  updateTime?: string
+}
+
 export interface Customer {
   id?: number
   name: string
@@ -18,6 +27,8 @@ export interface Customer {
   lastFollowUp?: string
   status?: CustomerStatus
   remark?: string
+  tags?: Tag[]
+  tagIds?: number[]
   createTime?: string
   updateTime?: string
 }
@@ -27,6 +38,7 @@ export interface CustomerQuery {
   status?: CustomerStatus
   source?: CustomerSource
   level?: CustomerLevel
+  tagIds?: number[]
   page?: number
   size?: number
 }

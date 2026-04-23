@@ -74,3 +74,21 @@ CREATE TABLE IF NOT EXISTS customer_note (
     update_time     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     INDEX idx_customer_id (customer_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='客户小记表';
+
+CREATE TABLE IF NOT EXISTS tag (
+    id              BIGINT PRIMARY KEY AUTO_INCREMENT,
+    name            VARCHAR(50) NOT NULL COMMENT '标签名称',
+    color           VARCHAR(20) NOT NULL COMMENT '颜色(HEX)',
+    create_time     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    update_time     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    UNIQUE KEY uk_name (name)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='标签表';
+
+CREATE TABLE IF NOT EXISTS customer_tag (
+    id              BIGINT PRIMARY KEY AUTO_INCREMENT,
+    customer_id     BIGINT NOT NULL COMMENT '客户ID',
+    tag_id          BIGINT NOT NULL COMMENT '标签ID',
+    create_time     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    UNIQUE KEY uk_customer_tag (customer_id, tag_id),
+    INDEX idx_tag_id (tag_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='客户标签关联表';

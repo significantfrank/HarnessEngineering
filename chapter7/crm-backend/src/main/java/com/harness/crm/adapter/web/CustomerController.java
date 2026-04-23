@@ -21,6 +21,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/customers")
 @RequiredArgsConstructor
@@ -56,9 +58,10 @@ public class CustomerController {
             @RequestParam(required = false) CustomerStatus status,
             @RequestParam(required = false) CustomerSource source,
             @RequestParam(required = false) CustomerLevel level,
+            @RequestParam(required = false) List<Long> tagIds,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        return ApiResponse.success(customerService.findByConditions(name, status, source, level, page, size));
+        return ApiResponse.success(customerService.findByConditions(name, status, source, level, tagIds, page, size));
     }
 
     @PostMapping("/{id}/notes")

@@ -7,6 +7,7 @@ import com.harness.crm.domain.customer.enums.CustomerStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface CustomerGatewayI {
@@ -17,5 +18,5 @@ public interface CustomerGatewayI {
 
     void deleteById(Long id);
 
-    Page<CustomerEntity> findByConditions(String name, CustomerStatus status, CustomerSource source, CustomerLevel level, Pageable pageable);
+    Page<CustomerEntity> findByConditions(String name, CustomerStatus status, CustomerSource source, CustomerLevel level, List<Long> tagIds, Pageable pageable);
 }

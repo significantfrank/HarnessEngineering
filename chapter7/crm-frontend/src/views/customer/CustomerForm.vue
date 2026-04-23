@@ -85,10 +85,17 @@
       </a-row>
       <a-row :gutter="16">
         <a-col :span="12">
+          <a-form-item label="标签" name="tagIds">
+            <TagSelect v-model="formState.tagIds!" />
+          </a-form-item>
+        </a-col>
+        <a-col :span="12">
           <a-form-item label="最后跟进" name="lastFollowUp">
             <a-date-picker v-model:value="formState.lastFollowUp" style="width: 100%" show-time />
           </a-form-item>
         </a-col>
+      </a-row>
+      <a-row :gutter="16">
       </a-row>
       <a-form-item label="地址" name="address" :label-col="{ span: 3 }" :wrapper-col="{ span: 20 }">
         <a-input v-model:value="formState.address" />
@@ -103,6 +110,7 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 import type { Customer } from '@/types/customer'
+import TagSelect from '@/components/TagSelect.vue'
 
 const props = defineProps<{
   open: boolean
@@ -130,11 +138,12 @@ const formState = ref<Customer>({
   lastFollowUp: undefined,
   status: 'ACTIVE',
   remark: '',
+  tagIds: [],
 })
 
-watch(() => props.open, (val) => {
-  if (val && props.customer) {
-    formState.value = { ...props.customer }
+watch([() => props.open, () => props.customer], ([val, customer]) => {
+  if (val && customer) {
+    formState.value = { ...customer, tagIds: customer.tagIds ?? customer.tags?.map(t => t.id!).filter(Boolean) ?? [] }
   } else if (val) {
     formState.value = {
       name: '',
@@ -150,6 +159,7 @@ watch(() => props.open, (val) => {
       lastFollowUp: undefined,
       status: 'ACTIVE',
       remark: '',
+      tagIds: [],
     }
   }
 })

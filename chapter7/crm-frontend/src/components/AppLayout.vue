@@ -5,7 +5,7 @@
         <span v-if="!collapsed">CRM系统</span>
         <span v-else>CRM</span>
       </div>
-      <a-menu v-model:selectedKeys="selectedKeys" theme="dark" mode="inline" @click="handleMenuClick">
+      <a-menu v-model:selectedKeys="selectedKeys" :openKeys="openKeys" theme="dark" mode="inline" @click="handleMenuClick">
         <a-menu-item key="/leads">
           <template #icon><SearchOutlined /></template>
           <span>线索管理</span>
@@ -18,10 +18,12 @@
           <template #icon><FileTextOutlined /></template>
           <span>订单管理</span>
         </a-menu-item>
-        <a-menu-item key="/customers">
+        <a-sub-menu key="/customers">
           <template #icon><UserOutlined /></template>
-          <span>客户管理</span>
-        </a-menu-item>
+          <template #title>客户管理</template>
+          <a-menu-item key="/customers">客户列表</a-menu-item>
+          <a-menu-item key="/tags">标签管理</a-menu-item>
+        </a-sub-menu>
       </a-menu>
     </a-layout-sider>
     <a-layout>
@@ -47,8 +49,15 @@ const route = useRoute()
 const collapsed = ref(false)
 const selectedKeys = computed(() => {
   const path = route.path
-  const key = ['/', '/leads', '/opportunities', '/orders', '/customers'].find(k => path.startsWith(k) && k !== '/') || path
+  const key = ['/', '/leads', '/opportunities', '/orders', '/customers', '/tags'].find(k => path.startsWith(k) && k !== '/') || path
   return [key]
+})
+const openKeys = computed(() => {
+  const path = route.path
+  if (path.startsWith('/customers') || path.startsWith('/tags')) {
+    return ['/customers']
+  }
+  return []
 })
 
 function handleMenuClick({ key }: { key: string }) {

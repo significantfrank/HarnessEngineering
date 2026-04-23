@@ -1,12 +1,14 @@
 package com.harness.crm.infrastructure.customer.gateway;
 
 import com.harness.crm.domain.customer.entity.CustomerEntity;
+import com.harness.crm.domain.customer.entity.CustomerTagRelEntity;
 import com.harness.crm.domain.customer.enums.CustomerLevel;
 import com.harness.crm.domain.customer.enums.CustomerSource;
 import com.harness.crm.domain.customer.enums.CustomerStatus;
 import com.harness.crm.domain.customer.gateway.CustomerGatewayI;
 import com.harness.crm.infrastructure.customer.repository.CustomerRepository;
 import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Subquery;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -39,7 +41,7 @@ public class CustomerGatewayImpl implements CustomerGatewayI {
     }
 
     @Override
-    public Page<CustomerEntity> findByConditions(String name, CustomerStatus status, CustomerSource source, CustomerLevel level, Pageable pageable) {
+    public Page<CustomerEntity> findByConditions(String name, CustomerStatus status, CustomerSource source, CustomerLevel level, List<Long> tagIds, Pageable pageable) {
         Specification<CustomerEntity> spec = (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
             if (name != null && !name.isBlank()) {
@@ -53,6 +55,19 @@ public class CustomerGatewayImpl implements CustomerGatewayI {
             }
             if (level != null) {
                 predicates.add(cb.equal(root.get("level"), level));
+            }
+            // 标签AND筛选：每个tagId生成一个EXISTS子查询
+            if (tagIds != null && !tagIds.isEmpty()) {
+                for (Long tagId : tagIds) {
+                    Subquery<Long> subquery = query.subquery(Long.class);
+                    jakarta.persistence.criteria.Root<CustomerTagRelEntity> subRoot = subquery.from(CustomerTagRelEntity.class);
+                    subquery.select(cb.literal(1L));
+                    subquery.where(
+                            cb.equal(subRoot.get("customerId"), root.get("id")),
+                            cb.equal(subRoot.get("tagId"), tagId)
+                    );
+                    predicates.add(cb.exists(subquery));
+                }
             }
             return cb.and(predicates.toArray(new Predicate[0]));
         };

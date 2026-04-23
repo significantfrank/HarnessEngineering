@@ -3,7 +3,13 @@ import type { Customer, CustomerQuery } from '@/types/customer'
 import type { PageResult, ApiResponse } from '@/types/common'
 
 export function getCustomers(params: CustomerQuery): Promise<ApiResponse<PageResult<Customer>>> {
-  return request.get('/api/customers', { params })
+  const requestParams: Record<string, any> = { ...params }
+  if (params.tagIds && params.tagIds.length > 0) {
+    requestParams.tagIds = params.tagIds
+  } else {
+    delete requestParams.tagIds
+  }
+  return request.get('/api/customers', { params: requestParams })
 }
 
 export function getCustomer(id: number): Promise<ApiResponse<Customer>> {
