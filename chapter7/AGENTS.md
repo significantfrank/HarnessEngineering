@@ -74,10 +74,8 @@ Key decisions:
 - **Gateway interface only**: `CustomerGatewayI` in domain, implemented in infrastructure (dependency inversion)
 - **No Service interface**: `CustomerService` is a concrete class
 - **Single DTO**: `CustomerDTO` for create, update, and response
-- **Manual lifecycle**: `prePersist()`/`preUpdate()` on Entity are called by domain service, NOT JPA `@PrePersist` callbacks. Bypassing the domain service means timestamps won't be set.
 
 ## API Conventions
-
 - Base path: `/api/customers`
 - All responses use `{ "code": "200", "message": "success", "data": ... }`
 - **Errors also return HTTP 200** with error codes in the body (e.g., `"code": "404"`)
@@ -88,10 +86,3 @@ Key decisions:
 - Vite proxies `/api` → `http://localhost:8080` in dev
 - Axios interceptor unwraps `ApiResponse`: checks `code !== '200'` and returns `res` (so `res.data` is the payload)
 - Page index sent to backend is 0-based; displayed as 1-based in Ant Design table
-
-## Database
-MySQL must be running at `localhost:3306`. Initialize with:
-```bash
-mysql -u root -proot < crm-backend/src/main/resources/db/schema.sql
-```
-Dev credentials: `root`/`root`, database: `crm`.

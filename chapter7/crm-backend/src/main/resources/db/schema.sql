@@ -64,3 +64,13 @@ CREATE TABLE IF NOT EXISTS `order` (
     update_time     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     UNIQUE KEY uk_order_no (order_no)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='订单表';
+
+CREATE TABLE IF NOT EXISTS customer_note (
+    id              BIGINT PRIMARY KEY AUTO_INCREMENT,
+    customer_id     BIGINT NOT NULL COMMENT '所属客户ID',
+    category        VARCHAR(20) NOT NULL COMMENT '类型: PHONE_CALL/VISIT/EMAIL/WECHAT/OTHER',
+    content         TEXT NOT NULL COMMENT '小记内容',
+    create_time     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    update_time     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    INDEX idx_customer_id (customer_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='客户小记表';

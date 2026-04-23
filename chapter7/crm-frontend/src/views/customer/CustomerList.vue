@@ -45,6 +45,7 @@
             <a-tag :color="statusColorMap[record.status]">{{ statusMap[record.status] || record.status }}</a-tag>
           </template>
           <template v-if="column.key === 'action'">
+            <a-button type="link" @click="router.push(`/customers/${record.id}`)">详情</a-button>
             <a-button type="link" @click="showForm(record)">编辑</a-button>
             <a-popconfirm title="确定删除该客户？" @confirm="handleDelete(record.id)">
               <a-button type="link" danger>删除</a-button>
@@ -64,10 +65,12 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useCustomerStore } from '@/stores/customer'
 import CustomerForm from './CustomerForm.vue'
 import type { Customer, CustomerSource, CustomerLevel, CustomerStatus } from '@/types/customer'
 
+const router = useRouter()
 const store = useCustomerStore()
 
 const searchName = ref<string | undefined>()
@@ -91,7 +94,7 @@ const columns = [
   { title: '等级', dataIndex: 'level', key: 'level', width: 80 },
   { title: '来源', dataIndex: 'source', key: 'source', width: 80 },
   { title: '状态', dataIndex: 'status', key: 'status', width: 80 },
-  { title: '操作', key: 'action', width: 120, fixed: 'right' as const },
+  { title: '操作', key: 'action', width: 160, fixed: 'right' as const },
 ]
 
 const pagination = computed(() => ({

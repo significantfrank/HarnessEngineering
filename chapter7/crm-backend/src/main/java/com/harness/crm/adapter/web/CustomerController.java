@@ -1,8 +1,10 @@
 package com.harness.crm.adapter.web;
 
 import com.harness.crm.adapter.web.common.ApiResponse;
+import com.harness.crm.app.customer.CustomerNoteService;
 import com.harness.crm.app.customer.CustomerService;
 import com.harness.crm.app.customer.dto.CustomerDTO;
+import com.harness.crm.app.customer.dto.CustomerNoteDTO;
 import com.harness.crm.domain.customer.enums.CustomerLevel;
 import com.harness.crm.domain.customer.enums.CustomerSource;
 import com.harness.crm.domain.customer.enums.CustomerStatus;
@@ -25,6 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class CustomerController {
 
     private final CustomerService customerService;
+    private final CustomerNoteService customerNoteService;
 
     @PostMapping
     public ApiResponse<CustomerDTO> create(@Valid @RequestBody CustomerDTO dto) {
@@ -56,5 +59,18 @@ public class CustomerController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         return ApiResponse.success(customerService.findByConditions(name, status, source, level, page, size));
+    }
+
+    @PostMapping("/{id}/notes")
+    public ApiResponse<CustomerNoteDTO> createNote(@PathVariable Long id, @Valid @RequestBody CustomerNoteDTO dto) {
+        return ApiResponse.success(customerNoteService.create(id, dto));
+    }
+
+    @GetMapping("/{id}/notes")
+    public ApiResponse<Page<CustomerNoteDTO>> listNotes(
+            @PathVariable Long id,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ApiResponse.success(customerNoteService.findByCustomerId(id, page, size));
     }
 }

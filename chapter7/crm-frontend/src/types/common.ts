@@ -1,6 +1,7 @@
 export type CustomerSource = 'REFERRAL' | 'WEBSITE' | 'AD' | 'COLD_CALL' | 'OTHER'
 export type CustomerLevel = 'VIP' | 'IMPORTANT' | 'NORMAL' | 'POTENTIAL'
 export type CustomerStatus = 'ACTIVE' | 'INACTIVE' | 'LOST'
+export type NoteCategory = 'PHONE_CALL' | 'VISIT' | 'EMAIL' | 'WECHAT' | 'OTHER'
 
 export interface Customer {
   id?: number
@@ -42,4 +43,13 @@ export interface ApiResponse<T> {
   code: string
   message: string
   data: T
+}
+
+export interface CustomerNote {
+  id?: number
+  customerId?: number
+  category: NoteCategory
+  content: string
+  createTime?: string
+  updateTime?: string
 }

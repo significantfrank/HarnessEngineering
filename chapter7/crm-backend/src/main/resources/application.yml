@@ -8,7 +8,6 @@ spring:
     properties:
       hibernate:
         format_sql: true
-        globally_quoted_identifiers: true
   jackson:
     date-format: yyyy-MM-dd HH:mm:ss
     time-zone: GMT+8
