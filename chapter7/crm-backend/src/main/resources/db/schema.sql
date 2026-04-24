@@ -16,9 +16,13 @@ CREATE TABLE IF NOT EXISTS customer (
     contact_person  VARCHAR(100) COMMENT '联系人',
     last_follow_up  DATETIME COMMENT '最后跟进时间',
     status          VARCHAR(20) NOT NULL DEFAULT 'ACTIVE' COMMENT '状态: ACTIVE/INACTIVE/LOST',
+    cc_sync_status  VARCHAR(20) NOT NULL DEFAULT 'PENDING' COMMENT 'center同步状态: PENDING/SYNCED/FAILED',
+    id_type         VARCHAR(20) COMMENT '证件类型',
+    id_number       VARCHAR(50) COMMENT '证件号码',
     remark          TEXT COMMENT '备注',
     create_time     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    update_time     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间'
+    update_time     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    UNIQUE KEY uk_id_number (id_number)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='客户表';
 
 CREATE TABLE IF NOT EXISTS lead (
@@ -30,6 +34,8 @@ CREATE TABLE IF NOT EXISTS lead (
     source          VARCHAR(50) COMMENT '来源: REFERRAL/WEBSITE/AD/COLD_CALL/OTHER',
     status          VARCHAR(20) NOT NULL DEFAULT 'NEW' COMMENT '状态: NEW/CONTACTED/QUALIFIED/UNQUALIFIED/CONVERTED',
     customer_id     BIGINT COMMENT '转化后关联的客户ID',
+    id_type         VARCHAR(20) COMMENT '证件类型',
+    id_number       VARCHAR(50) COMMENT '证件号码',
     owner_name      VARCHAR(100) COMMENT '负责人',
     remark          TEXT COMMENT '备注',
     create_time     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',

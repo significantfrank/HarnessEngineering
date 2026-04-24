@@ -19,43 +19,49 @@ public class CustomerController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public CustomerDTO create(@Valid @RequestBody CustomerDTO dto) {
+    public ApiResponse<CustomerDTO> create(@Valid @RequestBody CustomerDTO dto) {
         Customer customer = CustomerAssembler.toEntity(dto);
         Customer saved = customerApplicationService.createCustomer(customer);
-        return CustomerAssembler.toDTO(saved);
+        return ApiResponse.success(CustomerAssembler.toDTO(saved));
     }
 
     @GetMapping("/{id}")
-    public CustomerDTO get(@PathVariable Long id) {
+    public ApiResponse<CustomerDTO> get(@PathVariable Long id) {
         Customer customer = customerApplicationService.getCustomer(id);
-        return CustomerAssembler.toDTO(customer);
+        return ApiResponse.success(CustomerAssembler.toDTO(customer));
+    }
+
+    @GetMapping("/idNumber")
+    public ApiResponse<CustomerDTO> getByIdNumber(@RequestParam String idNumber) {
+        Customer customer = customerApplicationService.getCustomerByIdNumber(idNumber);
+        return ApiResponse.success(CustomerAssembler.toDTO(customer));
     }
 
     @GetMapping
-    public List<CustomerDTO> list(@RequestParam(required = false) String name,
-                                  @RequestParam(required = false) String phone,
-                                  @RequestParam(required = false) AccountStatus accountStatus) {
+    public ApiResponse<List<CustomerDTO>> list(@RequestParam(required = false) String name,
+                                               @RequestParam(required = false) String phone,
+                                               @RequestParam(required = false) AccountStatus accountStatus) {
         List<Customer> customers = customerApplicationService.listCustomers(name, phone, accountStatus);
-        return customers.stream().map(CustomerAssembler::toDTO).toList();
+        return ApiResponse.success(customers.stream().map(CustomerAssembler::toDTO).toList());
     }
 
     @PutMapping("/{id}")
-    public CustomerDTO update(@PathVariable Long id, @Valid @RequestBody CustomerDTO dto) {
+    public ApiResponse<CustomerDTO> update(@PathVariable Long id, @Valid @RequestBody CustomerDTO dto) {
         Customer customer = CustomerAssembler.toEntity(dto);
         Customer updated = customerApplicationService.updateCustomer(id, customer);
-        return CustomerAssembler.toDTO(updated);
+        return ApiResponse.success(CustomerAssembler.toDTO(updated));
     }
 
     @PutMapping("/{id}/freeze")
-    public CustomerDTO freeze(@PathVariable Long id, @Valid @RequestBody FreezeRequestDTO request) {
+    public ApiResponse<CustomerDTO> freeze(@PathVariable Long id, @Valid @RequestBody FreezeRequestDTO request) {
         Customer customer = customerApplicationService.freezeCustomer(id, request.getReason());
-        return CustomerAssembler.toDTO(customer);
+        return ApiResponse.success(CustomerAssembler.toDTO(customer));
     }
 
     @PutMapping("/{id}/unfreeze")
-    public CustomerDTO unfreeze(@PathVariable Long id, @Valid @RequestBody UnfreezeRequestDTO request) {
+    public ApiResponse<CustomerDTO> unfreeze(@PathVariable Long id, @Valid @RequestBody UnfreezeRequestDTO request) {
         Customer customer = customerApplicationService.unfreezeCustomer(id, request.getReason(), request.getAuthorizationDocument());
-        return CustomerAssembler.toDTO(customer);
+        return ApiResponse.success(CustomerAssembler.toDTO(customer));
     }
 
     @DeleteMapping("/{id}")

@@ -44,8 +44,8 @@ const router = createRouter({
     },
     {
       path: '/customers/:id',
-      name: 'CustomerDetail',
-      component: () => import('@/views/customer/CustomerDetail.vue'),
+      name: 'Customer360',
+      component: () => import('@/views/customer/Customer360.vue'),
     },
     {
       path: '/tags',

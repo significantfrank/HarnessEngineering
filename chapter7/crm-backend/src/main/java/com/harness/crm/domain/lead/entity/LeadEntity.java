@@ -51,6 +51,12 @@ public class LeadEntity {
 
     private Long customerId;
 
+    @Column(length = 20)
+    private String idType;
+
+    @Column(length = 50)
+    private String idNumber;
+
     @Column(length = 100)
     private String ownerName;
 

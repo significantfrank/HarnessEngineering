@@ -2,6 +2,7 @@ package com.harness.crm.infrastructure.customer.gateway;
 
 import com.harness.crm.domain.customer.entity.CustomerEntity;
 import com.harness.crm.domain.customer.entity.CustomerTagRelEntity;
+import com.harness.crm.domain.customer.enums.CcSyncStatus;
 import com.harness.crm.domain.customer.enums.CustomerLevel;
 import com.harness.crm.domain.customer.enums.CustomerSource;
 import com.harness.crm.domain.customer.enums.CustomerStatus;
@@ -72,5 +73,14 @@ public class CustomerGatewayImpl implements CustomerGatewayI {
             return cb.and(predicates.toArray(new Predicate[0]));
         };
         return customerRepository.findAll(spec, pageable);
+    }
+
+    @Override
+    public void updateSyncStatus(Long id, CcSyncStatus status) {
+        CustomerEntity entity = customerRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Customer not found: " + id));
+        entity.setCcSyncStatus(status);
+        entity.preUpdate();
+        customerRepository.save(entity);
     }
 }

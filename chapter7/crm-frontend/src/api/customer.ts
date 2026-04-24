@@ -1,6 +1,6 @@
 import request from './request'
 import type { Customer, CustomerQuery } from '@/types/customer'
-import type { PageResult, ApiResponse } from '@/types/common'
+import type { Customer360, PageResult, ApiResponse } from '@/types/common'
 
 export function getCustomers(params: CustomerQuery): Promise<ApiResponse<PageResult<Customer>>> {
   const requestParams: Record<string, any> = { ...params }
@@ -26,4 +26,8 @@ export function updateCustomer(id: number, data: Customer): Promise<ApiResponse<
 
 export function deleteCustomer(id: number): Promise<ApiResponse<void>> {
   return request.delete(`/api/customers/${id}`)
+}
+
+export function getCustomer360(id: number): Promise<ApiResponse<Customer360>> {
+  return request.get(`/api/customers/${id}/360`)
 }

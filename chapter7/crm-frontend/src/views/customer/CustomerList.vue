@@ -175,6 +175,8 @@ async function handleSubmit(data: Customer) {
     lastFollowUp: data.lastFollowUp,
     status: data.status,
     remark: data.remark,
+    idType: data.idType,
+    idNumber: data.idNumber,
     tagIds: data.tagIds,
   }
   if (data.id) {

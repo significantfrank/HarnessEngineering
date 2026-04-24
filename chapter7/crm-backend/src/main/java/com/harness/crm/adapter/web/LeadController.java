@@ -60,10 +60,30 @@ public class LeadController {
     }
 
     /**
-     * 线索转化：创建客户+机会
+     * 线索转化：创建Customer+Opportunity + center同步
      */
     @PostMapping("/{id}/convert")
     public ApiResponse<Map<String, Object>> convert(@PathVariable Long id, @Valid @RequestBody LeadConvertDTO convertDTO) {
-        return ApiResponse.success(leadService.convert(id, convertDTO));
+        Map<String, Object> result = leadService.convert(id, convertDTO);
+        Long customerId = (Long) result.get("customerId");
+        Long opportunityId = (Long) result.get("opportunityId");
+        String customerName = (String) result.get("customerName");
+        String customerPhone = (String) result.get("customerPhone");
+        String customerEmail = (String) result.get("customerEmail");
+        String customerIdType = (String) result.get("customerIdType");
+        String customerIdNumber = (String) result.get("customerIdNumber");
+        String originalStatus = (String) result.get("originalStatus");
+        Long originalCustomerId = (Long) result.get("originalCustomerId");
+
+        leadService.syncAfterConvert(
+                customerId, opportunityId, id,
+                originalStatus, originalCustomerId,
+                customerName, customerPhone, customerEmail, customerIdType, customerIdNumber
+        );
+
+        return ApiResponse.success(Map.of(
+                "customerId", customerId,
+                "opportunityId", opportunityId
+        ));
     }
 }

@@ -18,6 +18,12 @@ public class LeadConvertDTO {
     @NotBlank(message = "机会标题不能为空")
     private String opportunityTitle;
 
+    @NotBlank(message = "证件类型不能为空")
+    private String idType;
+
+    @NotBlank(message = "证件号码不能为空")
+    private String idNumber;
+
     private BigDecimal amount;
 
     private LocalDate expectedCloseDate;

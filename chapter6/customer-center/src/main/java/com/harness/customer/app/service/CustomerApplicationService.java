@@ -30,6 +30,11 @@ public class CustomerApplicationService {
                 .orElseThrow(() -> new IllegalArgumentException("Customer not found: " + id));
     }
 
+    public Customer getCustomerByIdNumber(String idNumber) {
+        return customerGateway.findByIdNumber(idNumber)
+                .orElseThrow(() -> new IllegalArgumentException("Customer not found by idNumber: " + idNumber));
+    }
+
     public List<Customer> listCustomers(String name, String phone, AccountStatus accountStatus) {
         return customerGateway.findByCondition(name, phone, accountStatus);
     }
@@ -38,21 +43,51 @@ public class CustomerApplicationService {
     public Customer updateCustomer(Long id, Customer customer) {
         Customer existing = getCustomer(id);
         customerDomainService.checkIdNumberUniqueForUpdate(customer.getIdNumber(), id);
-        existing.setName(customer.getName());
-        existing.setIdType(customer.getIdType());
-        existing.setIdNumber(customer.getIdNumber());
-        existing.setPhone(customer.getPhone());
-        existing.setEmail(customer.getEmail());
-        existing.setGender(customer.getGender());
-        existing.setBirthday(customer.getBirthday());
-        existing.setIdPhotoUrl(customer.getIdPhotoUrl());
-        existing.setRiskProfile(customer.getRiskProfile());
-        existing.setOccupation(customer.getOccupation());
-        existing.setIncomeRange(customer.getIncomeRange());
-        existing.setAum(customer.getAum());
-        existing.setAvailableBalance(customer.getAvailableBalance());
-        existing.setTotalReturn(customer.getTotalReturn());
-        existing.setHoldingProducts(customer.getHoldingProducts());
+        if (customer.getName() != null) {
+            existing.setName(customer.getName());
+        }
+        if (customer.getIdType() != null) {
+            existing.setIdType(customer.getIdType());
+        }
+        if (customer.getIdNumber() != null) {
+            existing.setIdNumber(customer.getIdNumber());
+        }
+        if (customer.getPhone() != null) {
+            existing.setPhone(customer.getPhone());
+        }
+        if (customer.getEmail() != null) {
+            existing.setEmail(customer.getEmail());
+        }
+        if (customer.getGender() != null) {
+            existing.setGender(customer.getGender());
+        }
+        if (customer.getBirthday() != null) {
+            existing.setBirthday(customer.getBirthday());
+        }
+        if (customer.getIdPhotoUrl() != null) {
+            existing.setIdPhotoUrl(customer.getIdPhotoUrl());
+        }
+        if (customer.getRiskProfile() != null) {
+            existing.setRiskProfile(customer.getRiskProfile());
+        }
+        if (customer.getOccupation() != null) {
+            existing.setOccupation(customer.getOccupation());
+        }
+        if (customer.getIncomeRange() != null) {
+            existing.setIncomeRange(customer.getIncomeRange());
+        }
+        if (customer.getAum() != null) {
+            existing.setAum(customer.getAum());
+        }
+        if (customer.getAvailableBalance() != null) {
+            existing.setAvailableBalance(customer.getAvailableBalance());
+        }
+        if (customer.getTotalReturn() != null) {
+            existing.setTotalReturn(customer.getTotalReturn());
+        }
+        if (customer.getHoldingProducts() != null && !customer.getHoldingProducts().isEmpty()) {
+            existing.setHoldingProducts(customer.getHoldingProducts());
+        }
         return customerGateway.save(existing);
     }
 

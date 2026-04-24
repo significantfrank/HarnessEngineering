@@ -51,7 +51,7 @@ class CustomerFreezeIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(dto)))
                 .andReturn().getResponse().getContentAsString();
-        return objectMapper.readTree(response).get("id").asLong();
+        return objectMapper.readTree(response).get("data").get("id").asLong();
     }
 
     private Long freezeCustomer(Long id, FreezeReason reason) throws Exception {
@@ -60,7 +60,7 @@ class CustomerFreezeIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andReturn().getResponse().getContentAsString();
-        return objectMapper.readTree(response).get("id").asLong();
+        return objectMapper.readTree(response).get("data").get("id").asLong();
     }
 
     @Test
@@ -72,8 +72,9 @@ class CustomerFreezeIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.accountStatus", is("FROZEN")))
-                .andExpect(jsonPath("$.freezeReason", is("RISK_CONTROL")));
+                .andExpect(jsonPath("$.code", is("200")))
+                .andExpect(jsonPath("$.data.accountStatus", is("FROZEN")))
+                .andExpect(jsonPath("$.data.freezeReason", is("RISK_CONTROL")));
     }
 
     @Test
@@ -85,8 +86,8 @@ class CustomerFreezeIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.accountStatus", is("FROZEN")))
-                .andExpect(jsonPath("$.freezeReason", is("AML_SUSPICION")));
+                .andExpect(jsonPath("$.data.accountStatus", is("FROZEN")))
+                .andExpect(jsonPath("$.data.freezeReason", is("AML_SUSPICION")));
     }
 
     @Test
@@ -98,8 +99,8 @@ class CustomerFreezeIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.accountStatus", is("FROZEN")))
-                .andExpect(jsonPath("$.freezeReason", is("JUDICIAL")));
+                .andExpect(jsonPath("$.data.accountStatus", is("FROZEN")))
+                .andExpect(jsonPath("$.data.freezeReason", is("JUDICIAL")));
     }
 
     @Test
@@ -111,8 +112,8 @@ class CustomerFreezeIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.accountStatus", is("FROZEN")))
-                .andExpect(jsonPath("$.freezeReason", is("CUSTOMER_REQUEST")));
+                .andExpect(jsonPath("$.data.accountStatus", is("FROZEN")))
+                .andExpect(jsonPath("$.data.freezeReason", is("CUSTOMER_REQUEST")));
     }
 
     @Test
@@ -125,7 +126,8 @@ class CustomerFreezeIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error", containsString("already frozen")));
+                .andExpect(jsonPath("$.code", is("400")))
+                .andExpect(jsonPath("$.message", containsString("already frozen")));
     }
 
     @Test
@@ -141,7 +143,8 @@ class CustomerFreezeIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error", containsString("Cancelled account cannot be frozen")));
+                .andExpect(jsonPath("$.code", is("400")))
+                .andExpect(jsonPath("$.message", containsString("Cancelled account cannot be frozen")));
     }
 
     @Test
@@ -151,7 +154,8 @@ class CustomerFreezeIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error", containsString("not found")));
+                .andExpect(jsonPath("$.code", is("400")))
+                .andExpect(jsonPath("$.message", containsString("not found")));
     }
 
     @Test
@@ -161,7 +165,8 @@ class CustomerFreezeIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{}"))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error", containsString("reason")));
+                .andExpect(jsonPath("$.code", is("400")))
+                .andExpect(jsonPath("$.message", containsString("reason")));
     }
 
     @Test
@@ -174,9 +179,10 @@ class CustomerFreezeIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.accountStatus", is("NORMAL")))
-                .andExpect(jsonPath("$.unfreezeReason", is("风险审查通过")))
-                .andExpect(jsonPath("$.freezeReason", is(nullValue())));
+                .andExpect(jsonPath("$.code", is("200")))
+                .andExpect(jsonPath("$.data.accountStatus", is("NORMAL")))
+                .andExpect(jsonPath("$.data.unfreezeReason", is("风险审查通过")))
+                .andExpect(jsonPath("$.data.freezeReason", is(nullValue())));
     }
 
     @Test
@@ -189,8 +195,9 @@ class CustomerFreezeIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.accountStatus", is("NORMAL")))
-                .andExpect(jsonPath("$.unfreezeReason", is("司法机关解冻")));
+                .andExpect(jsonPath("$.code", is("200")))
+                .andExpect(jsonPath("$.data.accountStatus", is("NORMAL")))
+                .andExpect(jsonPath("$.data.unfreezeReason", is("司法机关解冻")));
     }
 
     @Test
@@ -203,7 +210,8 @@ class CustomerFreezeIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error", containsString("authorization document")));
+                .andExpect(jsonPath("$.code", is("400")))
+                .andExpect(jsonPath("$.message", containsString("authorization document")));
     }
 
     @Test
@@ -216,7 +224,8 @@ class CustomerFreezeIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error", containsString("Invalid judicial unfreeze authorization")));
+                .andExpect(jsonPath("$.code", is("400")))
+                .andExpect(jsonPath("$.message", containsString("Invalid judicial unfreeze authorization")));
     }
 
     @Test
@@ -228,7 +237,8 @@ class CustomerFreezeIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error", containsString("Only frozen account can be unfrozen")));
+                .andExpect(jsonPath("$.code", is("400")))
+                .andExpect(jsonPath("$.message", containsString("Only frozen account can be unfrozen")));
     }
 
     @Test
@@ -238,7 +248,8 @@ class CustomerFreezeIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error", containsString("not found")));
+                .andExpect(jsonPath("$.code", is("400")))
+                .andExpect(jsonPath("$.message", containsString("not found")));
     }
 
     @Test
@@ -250,7 +261,8 @@ class CustomerFreezeIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{}"))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error", containsString("reason")));
+                .andExpect(jsonPath("$.code", is("400")))
+                .andExpect(jsonPath("$.message", containsString("reason")));
     }
 
     @Test
@@ -264,14 +276,14 @@ class CustomerFreezeIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(unfreezeRequest)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.accountStatus", is("NORMAL")));
+                .andExpect(jsonPath("$.data.accountStatus", is("NORMAL")));
 
         FreezeRequestDTO refreezeRequest = new FreezeRequestDTO(FreezeReason.AML_SUSPICION);
         mockMvc.perform(put("/api/customers/{id}/freeze", id)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(refreezeRequest)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.accountStatus", is("FROZEN")))
-                .andExpect(jsonPath("$.freezeReason", is("AML_SUSPICION")));
+                .andExpect(jsonPath("$.data.accountStatus", is("FROZEN")))
+                .andExpect(jsonPath("$.data.freezeReason", is("AML_SUSPICION")));
     }
 }

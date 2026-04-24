@@ -1,5 +1,6 @@
 package com.harness.crm.domain.customer.entity;
 
+import com.harness.crm.domain.customer.enums.CcSyncStatus;
 import com.harness.crm.domain.customer.enums.CustomerLevel;
 import com.harness.crm.domain.customer.enums.CustomerSource;
 import com.harness.crm.domain.customer.enums.CustomerStatus;
@@ -71,6 +72,16 @@ public class CustomerEntity {
     @Column(columnDefinition = "TEXT")
     private String remark;
 
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20, nullable = false)
+    private CcSyncStatus ccSyncStatus;
+
+    @Column(length = 20)
+    private String idType;
+
+    @Column(length = 50, unique = true)
+    private String idNumber;
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime createTime;
 
@@ -80,6 +91,9 @@ public class CustomerEntity {
     public void prePersist() {
         if (status == null) {
             status = CustomerStatus.ACTIVE;
+        }
+        if (ccSyncStatus == null) {
+            ccSyncStatus = CcSyncStatus.PENDING;
         }
         LocalDateTime now = LocalDateTime.now();
         if (createTime == null) {

@@ -3,6 +3,7 @@ package com.harness.crm.adapter.web;
 import com.harness.crm.adapter.web.common.ApiResponse;
 import com.harness.crm.app.customer.CustomerNoteService;
 import com.harness.crm.app.customer.CustomerService;
+import com.harness.crm.app.customer.dto.Customer360DTO;
 import com.harness.crm.app.customer.dto.CustomerDTO;
 import com.harness.crm.app.customer.dto.CustomerNoteDTO;
 import com.harness.crm.domain.customer.enums.CustomerLevel;
@@ -31,14 +32,26 @@ public class CustomerController {
     private final CustomerService customerService;
     private final CustomerNoteService customerNoteService;
 
+    /** 创建客户：本地save + center同步 */
     @PostMapping
     public ApiResponse<CustomerDTO> create(@Valid @RequestBody CustomerDTO dto) {
-        return ApiResponse.success(customerService.create(dto));
+        CustomerDTO saved = customerService.create(dto);
+        if (dto.getIdNumber() != null) {
+            customerService.syncAfterCreate(saved.getId(), saved.getName(), saved.getPhone(), saved.getEmail(), saved.getIdType(), saved.getIdNumber());
+            return ApiResponse.success(customerService.findById(saved.getId()));
+        }
+        return ApiResponse.success(saved);
     }
 
+    /** 更新客户：本地update + center同步 */
     @PutMapping("/{id}")
     public ApiResponse<CustomerDTO> update(@PathVariable Long id, @Valid @RequestBody CustomerDTO dto) {
-        return ApiResponse.success(customerService.update(id, dto));
+        CustomerDTO saved = customerService.update(id, dto);
+        if (saved.getIdNumber() != null) {
+            customerService.syncAfterUpdate(saved.getId(), saved.getIdNumber(), saved.getName(), saved.getPhone(), saved.getEmail(), saved.getIdType());
+            return ApiResponse.success(customerService.findById(saved.getId()));
+        }
+        return ApiResponse.success(saved);
     }
 
     @DeleteMapping("/{id}")
@@ -50,6 +63,12 @@ public class CustomerController {
     @GetMapping("/{id}")
     public ApiResponse<CustomerDTO> findById(@PathVariable Long id) {
         return ApiResponse.success(customerService.findById(id));
+    }
+
+    /** 客户360视图 */
+    @GetMapping("/{id}/360")
+    public ApiResponse<Customer360DTO> find360ById(@PathVariable Long id) {
+        return ApiResponse.success(customerService.find360ById(id));
     }
 
     @GetMapping

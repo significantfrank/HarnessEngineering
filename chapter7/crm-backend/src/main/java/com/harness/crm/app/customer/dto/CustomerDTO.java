@@ -1,5 +1,6 @@
 package com.harness.crm.app.customer.dto;
 
+import com.harness.crm.domain.customer.enums.CcSyncStatus;
 import com.harness.crm.domain.customer.enums.CustomerLevel;
 import com.harness.crm.domain.customer.enums.CustomerSource;
 import com.harness.crm.domain.customer.enums.CustomerStatus;
@@ -47,6 +48,12 @@ public class CustomerDTO {
     private CustomerStatus status;
 
     private String remark;
+
+    private String idType;
+
+    private String idNumber;
+
+    private CcSyncStatus ccSyncStatus;
 
     private List<TagDTO> tags;
 

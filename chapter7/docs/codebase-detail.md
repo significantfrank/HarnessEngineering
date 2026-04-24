@@ -1,3 +1,5 @@
+这里是代码仓库的完整详细文件列表。如果发现有不一致，请及时sync
+
 # crm-frontend 全量文件列表
 ```
 crm-frontend/
