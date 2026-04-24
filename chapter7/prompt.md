@@ -44,3 +44,12 @@
 ```
 /opsx-explore 增加客户标签功能，可以给客户打标签，通过标签快速筛选客户
 ```
+
+# 6 业务功能迭代四：外部系统集成
+```
+/opsx-explore 在本CRM之外，还有一个客户主数据服务（customer-center），
+1. 在创建，更新客户的时候，需要同步客户相关数据到customer-center
+2. 将客户详情页改造成客户360视图，CRM从customer-center拉取客户主数据，从本地数据拉取行为标签，实时组装。
+
+开发环境访问customer-center：http://localhost:8081/api/customers
+```
