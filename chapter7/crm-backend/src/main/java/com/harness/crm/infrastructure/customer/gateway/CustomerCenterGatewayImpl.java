@@ -11,6 +11,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
@@ -32,37 +34,31 @@ public class CustomerCenterGatewayImpl implements CustomerCenterGatewayI {
     }
 
     @Override
+    @Retryable(
+            value = {Exception.class},  // 指定需要重试的异常类型
+            maxAttempts = 4,             // 最大尝试次数（包括第一次）
+            backoff = @Backoff(
+                    delay = 1000,            // 初始延迟 1秒
+                    multiplier = 2,          // 延迟倍数：1000, 2000, 4000
+                    maxDelay = 4000          // 最大延迟时间
+            )
+    )
     public void createOrSync(String name, String phone, String email, String idType, String idNumber) {
-        int[] delays = {1000, 2000, 4000};
-        Exception lastException = null;
-        for (int i = 0; i <= delays.length; i++) {
-            try {
-                doCreateOrSync(name, phone, email, idType, idNumber);
-                return;
-            } catch (Exception e) {
-                lastException = e;
-                log.warn("center调用失败(第{}次): {}", i + 1, e.getMessage());
-                if (i < delays.length) sleepQuietly(delays[i]);
-            }
-        }
-        throw new RuntimeException("center调用失败，重试3次后仍不成功: " + lastException.getMessage(), lastException);
+        doCreateOrSync(name, phone, email, idType, idNumber);
     }
 
+    @Retryable(
+            value = {Exception.class},  // 指定需要重试的异常类型
+            maxAttempts = 4,             // 最大尝试次数（包括第一次）
+            backoff = @Backoff(
+                    delay = 1000,            // 初始延迟 1秒
+                    multiplier = 2,          // 延迟倍数：1000, 2000, 4000
+                    maxDelay = 4000          // 最大延迟时间
+            )
+    )
     @Override
     public void update(String idNumber, String name, String phone, String email, String idType) {
-        int[] delays = {1000, 2000, 4000};
-        Exception lastException = null;
-        for (int i = 0; i <= delays.length; i++) {
-            try {
-                doUpdate(idNumber, name, phone, email, idType);
-                return;
-            } catch (Exception e) {
-                lastException = e;
-                log.warn("center调用失败(第{}次): {}", i + 1, e.getMessage());
-                if (i < delays.length) sleepQuietly(delays[i]);
-            }
-        }
-        throw new RuntimeException("center调用失败，重试3次后仍不成功: " + lastException.getMessage(), lastException);
+        doUpdate(idNumber, name, phone, email, idType);
     }
 
     private void doCreateOrSync(String name, String phone, String email, String idType, String idNumber) {
@@ -139,15 +135,6 @@ public class CustomerCenterGatewayImpl implements CustomerCenterGatewayI {
         );
         restTemplate.exchange(baseUrl + "/api/customers/" + centerId,
                 HttpMethod.PUT, new HttpEntity<>(body, headers), Map.class);
-    }
-
-    private void sleepQuietly(int millis) {
-        try {
-            Thread.sleep(millis);
-        } catch (InterruptedException ie) {
-            Thread.currentThread().interrupt();
-            throw new RuntimeException("重试被中断", ie);
-        }
     }
 
     private String nvl(String s) { return s != null ? s : ""; }
