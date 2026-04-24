@@ -4,11 +4,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.harness.crm.app.lead.dto.LeadConvertDTO;
 import com.harness.crm.app.lead.dto.LeadDTO;
 import com.harness.crm.domain.customer.enums.CustomerSource;
+import com.harness.crm.domain.customer.gateway.CustomerCenterGatewayI;
 import com.harness.crm.domain.lead.enums.LeadStatus;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
@@ -34,6 +36,9 @@ class LeadControllerIntegrationTest {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @MockitoBean
+    private CustomerCenterGatewayI customerCenterGateway;
 
     private LeadDTO buildLeadDTO() {
         return LeadDTO.builder()
@@ -146,6 +151,8 @@ class LeadControllerIntegrationTest {
                 .opportunityTitle("测试机会")
                 .amount(new BigDecimal("50000"))
                 .expectedCloseDate(LocalDate.now().plusMonths(3))
+                .idType("ID_CARD")
+                .idNumber("110101199001011234")
                 .build();
 
         mockMvc.perform(post("/api/leads/{id}/convert", id)
@@ -153,11 +160,8 @@ class LeadControllerIntegrationTest {
                         .content(objectMapper.writeValueAsString(convertDTO)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value("200"))
-                .andExpect(jsonPath("$.data.customer.id").isNumber())
-                .andExpect(jsonPath("$.data.customer.name").value("测试线索"))
-                .andExpect(jsonPath("$.data.opportunity.id").isNumber())
-                .andExpect(jsonPath("$.data.opportunity.title").value("测试机会"))
-                .andExpect(jsonPath("$.data.opportunity.stage").value("PROSPECTING"));
+                .andExpect(jsonPath("$.data.customerId").isNumber())
+                .andExpect(jsonPath("$.data.opportunityId").isNumber());
 
         mockMvc.perform(get("/api/leads/{id}", id))
                 .andExpect(status().isOk())
@@ -176,6 +180,8 @@ class LeadControllerIntegrationTest {
         LeadConvertDTO convertDTO = LeadConvertDTO.builder()
                 .opportunityTitle("测试机会")
                 .amount(new BigDecimal("50000"))
+                .idType("ID_CARD")
+                .idNumber("110101199001019999")
                 .build();
 
         mockMvc.perform(post("/api/leads/{id}/convert", id)

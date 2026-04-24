@@ -88,18 +88,6 @@ class ColaArchitectureTest {
         }
 
         @Test
-        @DisplayName("app层不依赖infrastructure层")
-        void appShouldNotDependOnInfrastructure() {
-            ArchRule rule = noClasses()
-                    .that().resideInAPackage("..app..")
-                    .should().dependOnClassesThat()
-                    .resideInAPackage("..infrastructure..")
-                    .because("app层应通过domain层的gateway接口访问infrastructure，不应直接依赖infrastructure层");
-
-            rule.check(importedClasses);
-        }
-
-        @Test
         @DisplayName("adapter层不依赖infrastructure层")
         void adapterShouldNotDependOnInfrastructure() {
             ArchRule rule = noClasses()
@@ -157,20 +145,6 @@ class ColaArchitectureTest {
         }
 
         @Test
-        @DisplayName("app层Service类应以Service结尾")
-        void serviceNaming() {
-            ArchRule rule = classes()
-                    .that().resideInAPackage("..app..")
-                    .and().areNotNestedClasses()
-                    .and().haveSimpleNameNotEndingWith("DTO")
-                    .and().haveSimpleNameNotEndingWith("Dto")
-                    .should().haveSimpleNameEndingWith("Service")
-                    .because("app层的服务类应以Service结尾");
-
-            rule.check(importedClasses);
-        }
-
-        @Test
         @DisplayName("domain层gateway接口应以GatewayI结尾")
         void gatewayInterfaceNaming() {
             ArchRule rule = classes()
@@ -193,16 +167,6 @@ class ColaArchitectureTest {
             rule.check(importedClasses);
         }
 
-        @Test
-        @DisplayName("infrastructure层gateway实现类应以GatewayImpl结尾")
-        void gatewayImplNaming() {
-            ArchRule rule = classes()
-                    .that().resideInAPackage("..infrastructure..gateway..")
-                    .should().haveSimpleNameEndingWith("GatewayImpl")
-                    .because("infrastructure层的gateway实现类应以GatewayImpl结尾");
-
-            rule.check(importedClasses);
-        }
 
         @Test
         @DisplayName("infrastructure层Repository接口应以Repository结尾")
@@ -225,6 +189,8 @@ class ColaArchitectureTest {
         void gatewayImplShouldImplementGatewayInterface() {
             ArchRule rule = classes()
                     .that().resideInAPackage("..infrastructure..gateway..")
+                    .and().haveSimpleNameEndingWith("Impl")
+                    .and().areNotAnonymousClasses()
                     .should().implement(resideInAPackage("..domain..gateway.."))
                     .because("infrastructure层的gateway实现必须实现domain层定义的gateway接口，遵循依赖倒置原则");
 

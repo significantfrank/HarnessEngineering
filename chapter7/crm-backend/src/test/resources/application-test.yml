@@ -15,3 +15,6 @@ spring:
   h2:
     console:
       enabled: false
+
+customer-center:
+  base-url: http://localhost:8081

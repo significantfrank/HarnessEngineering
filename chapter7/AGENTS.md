@@ -10,7 +10,10 @@ This is a monorepo CRM project， 前端代码在crm-frontend, 后端代码在cr
 生成测试代码的时候，必须参考: @docs/test-guideline.md
 
 ## 阅读代码守则
-不需要Glob代码仓，可以直接访问 @docs/codebase-detail.md 获取代码仓库的完整详细文件列表。如果发现有不一致，请及时sync
+不需要Glob代码仓，可以直接访问 @docs/codebase-detail.md 
+
+## 外部系统依赖
+本系统依赖客户主数据服务（customer-center），涉及系统集成，务必参考其API：@docs/customer-center-api.yaml
 
 ## Key decisions:
 - **Entity = JPA entity**: `CustomerEntity` has `@Entity` directly, no separate DO layer

@@ -1,0 +1,42 @@
+{
+  "code": "200",
+  "message": "success",
+  "data": {
+    "id": 1,
+    "name": "张三",
+    "idType": "ID_CARD",
+    "idNumber": "110101199001011234",
+    "phone": "13800138000",
+    "email": "zhangsan@example.com",
+    "gender": "MALE",
+    "birthday": "1990-01-01",
+    "accountStatus": "NORMAL",
+    "memberLevel": "GOLD",
+    "authLevel": "L2",
+    "idPhotoUrl": "https://img.example.com/id/zhangsan.jpg",
+    "riskProfile": "MODERATE",
+    "occupation": "EMPLOYED",
+    "incomeRange": "R300K_500K",
+    "aum": 500000.00,
+    "availableBalance": 200000.00,
+    "totalReturn": 35000.50,
+    "freezeReason": null,
+    "unfreezeReason": null,
+    "holdingProducts": [
+      {
+        "productType": "FUND",
+        "productCode": "FUND001",
+        "productName": "稳健成长基金",
+        "amount": 200000.00
+      },
+      {
+        "productType": "WEALTH",
+        "productCode": "WEALTH001",
+        "productName": "安心理财计划",
+        "amount": 300000.00
+      }
+    ],
+    "createTime": "2026-04-24 10:00:00",
+    "updateTime": "2026-04-24 10:00:00"
+  }
+}

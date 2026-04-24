@@ -1,0 +1,476 @@
+openapi: 3.0.3
+
+info:
+  title: 客户中心服务 - 客户管理接口
+  description: 客户中心对外接口文档，包含客户创建和按证件号查询接口
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8081
+    description: 本地开发环境
+
+tags:
+  - name: 客户管理
+    description: 客户信息的创建与查询
+
+paths:
+  /api/customers:
+    post:
+      tags:
+        - 客户管理
+      operationId: createCustomer
+      summary: 创建客户
+      description: |
+        创建新客户，系统将自动初始化账户状态为 NORMAL（正常）。
+        证件号（idNumber）全局唯一，重复提交将返回错误。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomerCreateRequest'
+            examples:
+              idCard:
+                summary: 身份证客户
+                value:
+                  name: "张三"
+                  idType: "ID_CARD"
+                  idNumber: "110101199001011234"
+                  phone: "13800138000"
+                  email: "zhangsan@example.com"
+                  gender: "MALE"
+                  birthday: "1990-01-01"
+              passport:
+                summary: 护照客户
+                value:
+                  name: "John Smith"
+                  idType: "PASSPORT"
+                  idNumber: "E12345678"
+                  phone: "13800138001"
+                  email: "john@example.com"
+                  gender: "MALE"
+                  birthday: "1985-06-15"
+      responses:
+        '201':
+          description: 创建成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerResponse'
+              example:
+                code: "200"
+                message: "success"
+                data:
+                  id: 1
+                  name: "张三"
+                  idType: "ID_CARD"
+                  idNumber: "110101199001011234"
+                  phone: "13800138000"
+                  email: "zhangsan@example.com"
+                  gender: "MALE"
+                  birthday: "1990-01-01"
+                  accountStatus: "NORMAL"
+                  memberLevel: "REGULAR"
+                  authLevel: "L1"
+                  idPhotoUrl: null
+                  riskProfile: null
+                  occupation: null
+                  incomeRange: null
+                  aum: null
+                  availableBalance: null
+                  totalReturn: null
+                  freezeReason: null
+                  unfreezeReason: null
+                  holdingProducts: []
+                  createTime: "2026-04-24 10:00:00"
+                  updateTime: "2026-04-24 10:00:00"
+        '400':
+          description: 请求参数错误（校验失败、证件号重复等）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                validationError:
+                  summary: 参数校验失败
+                  value:
+                    code: "400"
+                    message: "name: must not be blank"
+                    data: null
+                duplicateIdNumber:
+                  summary: 证件号已存在
+                  value:
+                    code: "400"
+                    message: "Customer with idNumber 110101199001011234 already exists"
+                    data: null
+
+  /api/customers/idNumber:
+    get:
+      tags:
+        - 客户管理
+      operationId: getCustomerByIdNumber
+      summary: 根据证件号查询客户
+      description: 根据证件号精确查询客户信息，返回客户完整资料。
+      parameters:
+        - name: idNumber
+          in: query
+          required: true
+          description: 证件号码
+          schema:
+            type: string
+            maxLength: 64
+          example: "110101199001011234"
+      responses:
+        '200':
+          description: 查询成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerResponse'
+              example:
+                code: "200"
+                message: "success"
+                data:
+                  id: 1
+                  name: "张三"
+                  idType: "ID_CARD"
+                  idNumber: "110101199001011234"
+                  phone: "13800138000"
+                  email: "zhangsan@example.com"
+                  gender: "MALE"
+                  birthday: "1990-01-01"
+                  accountStatus: "NORMAL"
+                  memberLevel: "REGULAR"
+                  authLevel: "L1"
+                  idPhotoUrl: null
+                  riskProfile: null
+                  occupation: null
+                  incomeRange: null
+                  aum: null
+                  availableBalance: null
+                  totalReturn: null
+                  freezeReason: null
+                  unfreezeReason: null
+                  holdingProducts: []
+                  createTime: "2026-04-24 10:00:00"
+                  updateTime: "2026-04-24 10:00:00"
+        '400':
+          description: 客户不存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: "400"
+                message: "Customer with idNumber 110101199001011234 not found"
+                data: null
+
+components:
+  schemas:
+    CustomerCreateRequest:
+      type: object
+      required:
+        - name
+        - idType
+        - idNumber
+      properties:
+        name:
+          type: string
+          maxLength: 64
+          description: 客户姓名
+          example: "张三"
+        idType:
+          $ref: '#/components/schemas/IdType'
+        idNumber:
+          type: string
+          maxLength: 64
+          description: 证件号码（全局唯一）
+          example: "110101199001011234"
+        phone:
+          type: string
+          maxLength: 20
+          description: 手机号码
+          example: "13800138000"
+        email:
+          type: string
+          maxLength: 128
+          format: email
+          description: 电子邮箱
+          example: "zhangsan@example.com"
+        gender:
+          $ref: '#/components/schemas/Gender'
+        birthday:
+          type: string
+          format: date
+          description: 出生日期
+          example: "1990-01-01"
+
+    CustomerDTO:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: 客户ID（系统生成）
+          example: 1
+        name:
+          type: string
+          description: 客户姓名
+          example: "张三"
+        idType:
+          $ref: '#/components/schemas/IdType'
+        idNumber:
+          type: string
+          description: 证件号码
+          example: "110101199001011234"
+        phone:
+          type: string
+          description: 手机号码
+          example: "13800138000"
+        email:
+          type: string
+          description: 电子邮箱
+          example: "zhangsan@example.com"
+        gender:
+          $ref: '#/components/schemas/Gender'
+        birthday:
+          type: string
+          format: date
+          description: 出生日期
+          example: "1990-01-01"
+        accountStatus:
+          $ref: '#/components/schemas/AccountStatus'
+        memberLevel:
+          $ref: '#/components/schemas/MemberLevel'
+        authLevel:
+          $ref: '#/components/schemas/AuthLevel'
+        idPhotoUrl:
+          type: string
+          description: 证件照URL
+          nullable: true
+        riskProfile:
+          $ref: '#/components/schemas/RiskProfile'
+        occupation:
+          $ref: '#/components/schemas/OccupationCategory'
+        incomeRange:
+          $ref: '#/components/schemas/IncomeRange'
+        aum:
+          type: number
+          description: 资产管理规模（AUM）
+          nullable: true
+          example: 100000.00
+        availableBalance:
+          type: number
+          description: 可用余额
+          nullable: true
+          example: 50000.00
+        totalReturn:
+          type: number
+          description: 累计收益
+          nullable: true
+          example: 12000.50
+        freezeReason:
+          $ref: '#/components/schemas/FreezeReason'
+        unfreezeReason:
+          type: string
+          description: 解冻原因
+          nullable: true
+        holdingProducts:
+          type: array
+          description: 持有产品列表
+          items:
+            $ref: '#/components/schemas/HoldingProductDTO'
+        createTime:
+          type: string
+          format: "yyyy-MM-dd HH:mm:ss"
+          description: 创建时间
+          example: "2026-04-24 10:00:00"
+        updateTime:
+          type: string
+          format: "yyyy-MM-dd HH:mm:ss"
+          description: 更新时间
+          example: "2026-04-24 10:00:00"
+
+    HoldingProductDTO:
+      type: object
+      properties:
+        productType:
+          $ref: '#/components/schemas/ProductType'
+        productCode:
+          type: string
+          description: 产品代码
+          example: "FUND001"
+        productName:
+          type: string
+          description: 产品名称
+          example: "稳健成长基金"
+        amount:
+          type: number
+          description: 持有金额
+          example: 50000.00
+
+    CustomerResponse:
+      type: object
+      description: 统一响应体
+      properties:
+        code:
+          type: string
+          description: 响应码，200表示成功
+          example: "200"
+        message:
+          type: string
+          description: 响应消息
+          example: "success"
+        data:
+          $ref: '#/components/schemas/CustomerDTO'
+
+    ErrorResponse:
+      type: object
+      description: 错误响应体
+      properties:
+        code:
+          type: string
+          description: 错误码，400表示客户端错误，500表示服务端错误
+          example: "400"
+        message:
+          type: string
+          description: 错误详细信息
+          example: "Customer with idNumber 110101199001011234 not found"
+        data:
+          type: object
+          nullable: true
+          description: 错误响应中data始终为null
+
+    IdType:
+      type: string
+      description: 证件类型
+      enum:
+        - ID_CARD
+        - PASSPORT
+        - OTHER
+      x-enum-descriptions:
+        ID_CARD: 身份证
+        PASSPORT: 护照
+        OTHER: 其他
+
+    Gender:
+      type: string
+      description: 性别
+      enum:
+        - MALE
+        - FEMALE
+        - UNKNOWN
+      x-enum-descriptions:
+        MALE: 男
+        FEMALE: 女
+        UNKNOWN: 未知
+
+    AccountStatus:
+      type: string
+      description: 账户状态
+      enum:
+        - NORMAL
+        - FROZEN
+        - CANCELLED
+      x-enum-descriptions:
+        NORMAL: 正常
+        FROZEN: 冻结
+        CANCELLED: 注销
+
+    MemberLevel:
+      type: string
+      description: 会员等级
+      enum:
+        - REGULAR
+        - SILVER
+        - GOLD
+        - BLACK
+      x-enum-descriptions:
+        REGULAR: 普通
+        SILVER: 银卡
+        GOLD: 金卡
+        BLACK: 黑卡
+
+    AuthLevel:
+      type: string
+      description: 认证等级
+      enum:
+        - L1
+        - L2
+        - L3
+      x-enum-descriptions:
+        L1: 一级认证
+        L2: 二级认证
+        L3: 三级认证
+
+    RiskProfile:
+      type: string
+      description: 风险偏好
+      enum:
+        - CONSERVATIVE
+        - MODERATE
+        - AGGRESSIVE
+      x-enum-descriptions:
+        CONSERVATIVE: 保守型
+        MODERATE: 稳健型
+        AGGRESSIVE: 激进型
+
+    OccupationCategory:
+      type: string
+      description: 职业类别
+      enum:
+        - EMPLOYED
+        - SELF_EMPLOYED
+        - CIVIL_SERVANT
+        - RETIRED
+        - STUDENT
+        - OTHER
+      x-enum-descriptions:
+        EMPLOYED: 受雇
+        SELF_EMPLOYED: 自雇
+        CIVIL_SERVANT: 公务员
+        RETIRED: 退休
+        STUDENT: 学生
+        OTHER: 其他
+
+    IncomeRange:
+      type: string
+      description: 收入区间
+      enum:
+        - BELOW_100K
+        - R100K_300K
+        - R300K_500K
+        - R500K_1M
+        - ABOVE_1M
+      x-enum-descriptions:
+        BELOW_100K: 10万以下
+        R100K_300K: 10万-30万
+        R300K_500K: 30万-50万
+        R500K_1M: 50万-100万
+        ABOVE_1M: 100万以上
+
+    FreezeReason:
+      type: string
+      description: 冻结原因
+      enum:
+        - RISK_CONTROL
+        - AML_SUSPICION
+        - JUDICIAL
+        - CUSTOMER_REQUEST
+      x-enum-descriptions:
+        RISK_CONTROL: 风控冻结
+        AML_SUSPICION: 反洗钱嫌疑
+        JUDICIAL: 司法冻结
+        CUSTOMER_REQUEST: 客户申请
+
+    ProductType:
+      type: string
+      description: 产品类型
+      enum:
+        - FUND
+        - WEALTH
+        - INSURANCE
+      x-enum-descriptions:
+        FUND: 基金
+        WEALTH: 理财
+        INSURANCE: 保险

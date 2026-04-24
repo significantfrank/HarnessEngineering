@@ -34,6 +34,23 @@
       </a-row>
       <a-row :gutter="16">
         <a-col :span="12">
+          <a-form-item label="证件类型" name="idType">
+            <a-select v-model:value="formState.idType" placeholder="请选择证件类型" allow-clear>
+              <a-select-option value="ID_CARD">身份证</a-select-option>
+              <a-select-option value="PASSPORT">护照</a-select-option>
+              <a-select-option value="DRIVER_LICENSE">驾驶证</a-select-option>
+              <a-select-option value="OTHER">其他</a-select-option>
+            </a-select>
+          </a-form-item>
+        </a-col>
+        <a-col :span="12">
+          <a-form-item label="证件号码" name="idNumber">
+            <a-input v-model:value="formState.idNumber" :disabled="!!customer?.id" placeholder="证件号码创建后不可修改" />
+          </a-form-item>
+        </a-col>
+      </a-row>
+      <a-row :gutter="16">
+        <a-col :span="12">
           <a-form-item label="公司" name="company">
             <a-input v-model:value="formState.company" />
           </a-form-item>
@@ -138,6 +155,8 @@ const formState = ref<Customer>({
   lastFollowUp: undefined,
   status: 'ACTIVE',
   remark: '',
+  idType: undefined,
+  idNumber: '',
   tagIds: [],
 })
 
@@ -159,6 +178,8 @@ watch([() => props.open, () => props.customer], ([val, customer]) => {
       lastFollowUp: undefined,
       status: 'ACTIVE',
       remark: '',
+      idType: undefined,
+      idNumber: '',
       tagIds: [],
     }
   }

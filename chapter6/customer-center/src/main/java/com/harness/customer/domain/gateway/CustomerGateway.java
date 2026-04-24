@@ -18,5 +18,7 @@ public interface CustomerGateway {
 
     void deleteById(Long id);
 
+    Optional<Customer> findByIdNumber(String idNumber);
+
     boolean existsByIdNumber(String idNumber);
 }

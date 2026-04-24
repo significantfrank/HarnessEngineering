@@ -42,6 +42,11 @@ public class CustomerGatewayImpl implements CustomerGateway {
     }
 
     @Override
+    public Optional<Customer> findByIdNumber(String idNumber) {
+        return customerJpaRepository.findByIdNumber(idNumber);
+    }
+
+    @Override
     public boolean existsByIdNumber(String idNumber) {
         return customerJpaRepository.existsByIdNumber(idNumber);
     }

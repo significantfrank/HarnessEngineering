@@ -1,6 +1,7 @@
 package com.harness.crm.domain.customer.gateway;
 
 import com.harness.crm.domain.customer.entity.CustomerEntity;
+import com.harness.crm.domain.customer.enums.CcSyncStatus;
 import com.harness.crm.domain.customer.enums.CustomerLevel;
 import com.harness.crm.domain.customer.enums.CustomerSource;
 import com.harness.crm.domain.customer.enums.CustomerStatus;
@@ -19,4 +20,6 @@ public interface CustomerGatewayI {
     void deleteById(Long id);
 
     Page<CustomerEntity> findByConditions(String name, CustomerStatus status, CustomerSource source, CustomerLevel level, List<Long> tagIds, Pageable pageable);
+
+    void updateSyncStatus(Long id, CcSyncStatus status);
 }

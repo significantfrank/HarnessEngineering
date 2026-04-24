@@ -57,12 +57,13 @@ class CustomerControllerIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id", notNullValue()))
-                .andExpect(jsonPath("$.name", is("张三")))
-                .andExpect(jsonPath("$.idType", is("ID_CARD")))
-                .andExpect(jsonPath("$.idNumber", is("110101199001011234")))
-                .andExpect(jsonPath("$.accountStatus", is("NORMAL")))
-                .andExpect(jsonPath("$.createTime", notNullValue()));
+                .andExpect(jsonPath("$.code", is("200")))
+                .andExpect(jsonPath("$.data.id", notNullValue()))
+                .andExpect(jsonPath("$.data.name", is("张三")))
+                .andExpect(jsonPath("$.data.idType", is("ID_CARD")))
+                .andExpect(jsonPath("$.data.idNumber", is("110101199001011234")))
+                .andExpect(jsonPath("$.data.accountStatus", is("NORMAL")))
+                .andExpect(jsonPath("$.data.createTime", notNullValue()));
     }
 
     @Test
@@ -77,7 +78,8 @@ class CustomerControllerIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error", containsString("already exists")));
+                .andExpect(jsonPath("$.code", is("400")))
+                .andExpect(jsonPath("$.message", containsString("already exists")));
     }
 
     @Test
@@ -89,7 +91,8 @@ class CustomerControllerIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error", containsString("name")));
+                .andExpect(jsonPath("$.code", is("400")))
+                .andExpect(jsonPath("$.message", containsString("name")));
     }
 
     @Test
@@ -101,7 +104,8 @@ class CustomerControllerIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error", containsString("idNumber")));
+                .andExpect(jsonPath("$.code", is("400")))
+                .andExpect(jsonPath("$.message", containsString("idNumber")));
     }
 
     @Test
@@ -111,19 +115,43 @@ class CustomerControllerIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(dto)))
                 .andReturn().getResponse().getContentAsString();
-        Long id = objectMapper.readTree(response).get("id").asLong();
+        Long id = objectMapper.readTree(response).get("data").get("id").asLong();
 
         mockMvc.perform(get("/api/customers/{id}", id))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id", is(id.intValue())))
-                .andExpect(jsonPath("$.name", is("张三")));
+                .andExpect(jsonPath("$.code", is("200")))
+                .andExpect(jsonPath("$.data.id", is(id.intValue())))
+                .andExpect(jsonPath("$.data.name", is("张三")));
     }
 
     @Test
     void getCustomer_notFound() throws Exception {
         mockMvc.perform(get("/api/customers/{id}", 99999L))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error", containsString("not found")));
+                .andExpect(jsonPath("$.code", is("400")))
+                .andExpect(jsonPath("$.message", containsString("not found")));
+    }
+
+    @Test
+    void getCustomerByIdNumber_success() throws Exception {
+        CustomerDTO dto = buildValidDTO();
+        mockMvc.perform(post("/api/customers")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(dto)));
+
+        mockMvc.perform(get("/api/customers/idNumber").param("idNumber", "110101199001011234"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code", is("200")))
+                .andExpect(jsonPath("$.data.idNumber", is("110101199001011234")))
+                .andExpect(jsonPath("$.data.name", is("张三")));
+    }
+
+    @Test
+    void getCustomerByIdNumber_notFound() throws Exception {
+        mockMvc.perform(get("/api/customers/idNumber").param("idNumber", "999999999999999999"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code", is("400")))
+                .andExpect(jsonPath("$.message", containsString("not found")));
     }
 
     @Test
@@ -142,7 +170,8 @@ class CustomerControllerIntegrationTest {
 
         mockMvc.perform(get("/api/customers"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(2)));
+                .andExpect(jsonPath("$.code", is("200")))
+                .andExpect(jsonPath("$.data", hasSize(2)));
     }
 
     @Test
@@ -161,8 +190,9 @@ class CustomerControllerIntegrationTest {
 
         mockMvc.perform(get("/api/customers").param("name", "张"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].name", is("张三")));
+                .andExpect(jsonPath("$.code", is("200")))
+                .andExpect(jsonPath("$.data", hasSize(1)))
+                .andExpect(jsonPath("$.data[0].name", is("张三")));
     }
 
     @Test
@@ -174,11 +204,11 @@ class CustomerControllerIntegrationTest {
 
         mockMvc.perform(get("/api/customers").param("accountStatus", "NORMAL"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(1)));
+                .andExpect(jsonPath("$.data", hasSize(1)));
 
         mockMvc.perform(get("/api/customers").param("accountStatus", "FROZEN"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(0)));
+                .andExpect(jsonPath("$.data", hasSize(0)));
     }
 
     @Test
@@ -188,7 +218,7 @@ class CustomerControllerIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(dto)))
                 .andReturn().getResponse().getContentAsString();
-        Long id = objectMapper.readTree(response).get("id").asLong();
+        Long id = objectMapper.readTree(response).get("data").get("id").asLong();
 
         CustomerDTO updateDTO = buildValidDTO();
         updateDTO.setName("王五");
@@ -198,8 +228,9 @@ class CustomerControllerIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updateDTO)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name", is("王五")))
-                .andExpect(jsonPath("$.phone", is("13900139000")));
+                .andExpect(jsonPath("$.code", is("200")))
+                .andExpect(jsonPath("$.data.name", is("王五")))
+                .andExpect(jsonPath("$.data.phone", is("13900139000")));
     }
 
     @Test
@@ -216,7 +247,7 @@ class CustomerControllerIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(dto2)))
                 .andReturn().getResponse().getContentAsString();
-        Long id2 = objectMapper.readTree(response2).get("id").asLong();
+        Long id2 = objectMapper.readTree(response2).get("data").get("id").asLong();
 
         CustomerDTO updateDTO = buildValidDTO();
         updateDTO.setIdNumber("110101199001011234");
@@ -225,7 +256,8 @@ class CustomerControllerIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updateDTO)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error", containsString("already exists")));
+                .andExpect(jsonPath("$.code", is("400")))
+                .andExpect(jsonPath("$.message", containsString("already exists")));
     }
 
     @Test
@@ -235,7 +267,8 @@ class CustomerControllerIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error", containsString("not found")));
+                .andExpect(jsonPath("$.code", is("400")))
+                .andExpect(jsonPath("$.message", containsString("not found")));
     }
 
     @Test
@@ -245,7 +278,7 @@ class CustomerControllerIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(dto)))
                 .andReturn().getResponse().getContentAsString();
-        Long id = objectMapper.readTree(response).get("id").asLong();
+        Long id = objectMapper.readTree(response).get("data").get("id").asLong();
 
         mockMvc.perform(delete("/api/customers/{id}", id))
                 .andExpect(status().isNoContent());
@@ -258,6 +291,7 @@ class CustomerControllerIntegrationTest {
     void deleteCustomer_notFound() throws Exception {
         mockMvc.perform(delete("/api/customers/{id}", 99999L))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error", containsString("not found")));
+                .andExpect(jsonPath("$.code", is("400")))
+                .andExpect(jsonPath("$.message", containsString("not found")));
     }
 }

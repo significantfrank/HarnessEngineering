@@ -7,3 +7,6 @@ spring:
 
 server:
   port: 8080
+
+customer-center:
+  base-url: http://localhost:8081
