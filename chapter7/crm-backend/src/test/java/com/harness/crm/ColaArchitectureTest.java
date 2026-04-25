@@ -203,7 +203,7 @@ class ColaArchitectureTest {
     class PackageLayeringRules {
 
         @Test
-        @DisplayName("不允许分层之间出现循环依赖")
+        @DisplayName("不许分层之间出现循环依赖")
         void noPackageCycles() {
             ArchRule rule = slices()
                     .matching("com.harness.crm.(*)..")
