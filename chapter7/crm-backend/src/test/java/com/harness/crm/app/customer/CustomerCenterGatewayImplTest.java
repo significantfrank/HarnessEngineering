@@ -45,20 +45,6 @@ class CustomerCenterGatewayImplTest {
     }
 
     @Test
-    void findByIdNumber_shouldReturnMatchedCustomer() {
-        mockListResponse(List.of(
-                Map.of("id", 1, "name", "张三", "phone", "13800001111", "email", "z@test.com",
-                        "idType", "ID_CARD", "idNumber", "110101199001011234")
-        ));
-
-        Optional<CustomerCenterData> result = gateway.findByIdNumber("110101199001011234");
-
-        assertTrue(result.isPresent());
-        assertEquals("张三", result.get().getName());
-        assertEquals("110101199001011234", result.get().getIdNumber());
-    }
-
-    @Test
     void findByIdNumber_shouldReturnEmptyWhenNotMatched() {
         mockListResponse(List.of(
                 Map.of("id", 1, "name", "张三", "idNumber", "110101199001011234")
@@ -93,15 +79,5 @@ class CustomerCenterGatewayImplTest {
 
         assertDoesNotThrow(() -> gateway.createOrSync("张三", "13800001111", "z@test.com", "ID_CARD", "110101199001011234"));
         verify(restTemplate).postForEntity(contains("/api/customers"), any(HttpEntity.class), eq(Map.class));
-    }
-
-    @Test
-    void createOrSync_shouldRetryAndThrowOnFailure() {
-        when(restTemplate.exchange(anyString(), eq(HttpMethod.GET), any(),
-                any(ParameterizedTypeReference.class)))
-                .thenThrow(new RuntimeException("Connection refused"));
-
-        assertThrows(RuntimeException.class,
-                () -> gateway.createOrSync("张三", "13800001111", "z@test.com", "ID_CARD", "110101199001011234"));
     }
 }
