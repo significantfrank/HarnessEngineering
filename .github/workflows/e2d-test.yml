@@ -1,0 +1,23 @@
+name: CRM E2E Test
+
+on:
+  push:
+    paths:
+      - 'chapter7/crm-backend/**'
+  pull_request:
+    paths:
+      - 'chapter7/crm-backend/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run docker-compose tests
+        run: docker-compose --profile test up --abort-on-container-exit --exit-code-from e2e-tests
+
+      - name: Cleanup
+        if: always()
+        run: docker-compose --profile test down -v
