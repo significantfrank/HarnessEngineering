@@ -1,0 +1,85 @@
+name: Deploy to Aliyun ECS
+
+on:
+  workflow_dispatch:
+
+env:
+  ACR_REGISTRY: ${{ secrets.ACR_REGISTRY }}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Login to Aliyun ACR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ secrets.ACR_REGISTRY }}
+          username: ${{ secrets.ACR_USERNAME }}
+          password: ${{ secrets.ACR_PASSWORD }}
+
+      - name: Build and push crm-backend
+        uses: docker/build-push-action@v6
+        with:
+          context: ./chapter7/crm-backend
+          push: true
+          tags: |
+            ${{ secrets.ACR_REGISTRY }}/crm-backend:latest
+            ${{ secrets.ACR_REGISTRY }}/crm-backend:${{ github.sha }}
+
+      - name: Build and push customer-center
+        uses: docker/build-push-action@v6
+        with:
+          context: ./chapter6/customer-center
+          push: true
+          tags: |
+            ${{ secrets.ACR_REGISTRY }}/customer-center:latest
+            ${{ secrets.ACR_REGISTRY }}/customer-center:${{ github.sha }}
+
+      - name: Build and push crm-frontend
+        uses: docker/build-push-action@v6
+        with:
+          context: ./chapter7/crm-frontend
+          push: true
+          tags: |
+            ${{ secrets.ACR_REGISTRY }}/crm-frontend:latest
+            ${{ secrets.ACR_REGISTRY }}/crm-frontend:${{ github.sha }}
+
+      - name: Create .env file
+        run: |
+          cat > .env.prod <<EOF
+          ACR_REGISTRY=${{ secrets.ACR_REGISTRY }}
+          MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}
+          MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}
+          EOF
+
+      - name: Copy files to ECS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.ECS_HOST }}
+          username: ${{ secrets.ECS_USER }}
+          key: ${{ secrets.ECS_SSH_KEY }}
+          source: |
+            docker-compose.prod.yml
+            .env.prod
+            e2e-tests/init-scripts
+          target: /opt/crm
+          strip_components: 0
+
+      - name: Deploy on ECS
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.ECS_HOST }}
+          username: ${{ secrets.ECS_USER }}
+          key: ${{ secrets.ECS_SSH_KEY }}
+          script: |
+            cd /opt/crm
+            mv .env.prod .env
+            docker compose -f docker-compose.prod.yml pull
+            docker compose -f docker-compose.prod.yml down
+            docker compose -f docker-compose.prod.yml up -d
+            echo "Waiting for services to be healthy..."
+            sleep 30
+            docker compose -f docker-compose.prod.yml ps
