@@ -3,10 +3,10 @@ name: CRM E2E Test
 on:
   push:
     paths:
-      - 'chapter7/crm-backend/**'
+      - 'e2e-tests/**'
   pull_request:
     paths:
-      - 'chapter7/crm-backend/**'
+      - 'e2e-tests/**'
 
 jobs:
   test:

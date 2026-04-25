@@ -1,0 +1,33 @@
+name: Customer Center Unit Test
+
+on:
+  push:
+    paths:
+      - 'chapter6/customer-center/**'
+  pull_request:
+    paths:
+      - 'chapter6/customer-center/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Cache Maven packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('chapter6/customer-center/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+
+      - name: Run mvn test
+        run: mvn test
+        working-directory: chapter6/customer-center

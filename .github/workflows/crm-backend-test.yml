@@ -1,0 +1,33 @@
+name: CRM Backend Unit Test
+
+on:
+  push:
+    paths:
+      - 'chapter7/crm-backend/**'
+  pull_request:
+    paths:
+      - 'chapter7/crm-backend/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Cache Maven packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('chapter7/crm-backend/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+
+      - name: Run mvn test
+        run: mvn test
+        working-directory: chapter7/crm-backend
