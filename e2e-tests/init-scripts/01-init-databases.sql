@@ -1,0 +1,6 @@
+CREATE DATABASE IF NOT EXISTS crm DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE DATABASE IF NOT EXISTS customer_center DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+GRANT ALL PRIVILEGES ON crm.* TO 'crm_user'@'%';
+GRANT ALL PRIVILEGES ON customer_center.* TO 'crm_user'@'%';
+FLUSH PRIVILEGES;

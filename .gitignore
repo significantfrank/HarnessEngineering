@@ -4,6 +4,14 @@
 .claude/
 target/
 
+# test
+playwright-report/
+test-results/
+
+# npm
+node_modules/
+package-lock.json
+
 # Python
 __pycache__/
 *.py[cod]

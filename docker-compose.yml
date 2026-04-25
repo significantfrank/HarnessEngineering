@@ -1,0 +1,146 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: crm-mysql-test
+    ports:
+      - "3307:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: crm
+      MYSQL_USER: crm_user
+      MYSQL_PASSWORD: crm_pass
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --default-authentication-plugin=mysql_native_password
+    volumes:
+      - mysql-test-data:/var/lib/mysql
+      - ./e2e-tests/init-scripts:/docker-entrypoint-initdb.d
+    networks:
+      - crm-test-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot123"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  crm-backend:
+    build:
+      context: ./chapter7/crm-backend
+      dockerfile: Dockerfile
+    container_name: crm-backend-test
+    ports:
+      - "8080:8080"
+    environment:
+      - SERVER_PORT=8080
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/crm?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+      - SPRING_DATASOURCE_USERNAME=crm_user
+      - SPRING_DATASOURCE_PASSWORD=crm_pass
+      - SPRING_DATASOURCE_DRIVER_CLASS_NAME=com.mysql.cj.jdbc.Driver
+      - CUSTOMER_CENTER_BASE_URL=http://customer-center:8081
+      - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - crm-test-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+
+  customer-center:
+    build:
+      context: ./chapter6/customer-center
+      dockerfile: Dockerfile
+    container_name: customer-center-test
+    ports:
+      - "8081:8081"
+    environment:
+      - SERVER_PORT=8081
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/customer_center?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+      - SPRING_DATASOURCE_USERNAME=crm_user
+      - SPRING_DATASOURCE_PASSWORD=crm_pass
+      - SPRING_DATASOURCE_DRIVER_CLASS_NAME=com.mysql.cj.jdbc.Driver
+      - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - crm-test-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+
+  frontend:
+    build:
+      context: ./chapter7/crm-frontend
+      dockerfile: Dockerfile
+    container_name: crm-frontend-test
+    ports:
+      - "5173:80"
+    depends_on:
+      crm-backend:
+        condition: service_healthy
+      customer-center:
+        condition: service_healthy
+    networks:
+      - crm-test-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  e2e-tests:
+    image: mcr.microsoft.com/playwright:v1.52.0-noble
+    container_name: crm-e2e-tests
+    depends_on:
+      frontend:
+        condition: service_healthy
+      crm-backend:
+        condition: service_healthy
+      customer-center:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+    environment:
+      - BASE_URL=http://frontend:80
+      - CRM_API_URL=http://crm-backend:8080
+      - CUSTOMER_CENTER_URL=http://customer-center:8081
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_NAME=crm
+      - DB_USER=crm_user
+      - DB_PASSWORD=crm_pass
+    volumes:
+      - ./e2e-tests:/e2e-tests
+      - ./e2e-tests/playwright-report:/playwright-report
+    working_dir: /e2e-tests
+    command: >
+      sh -c "
+        echo 'All services ready, installing dependencies...' &&
+        npm install &&
+        npx playwright test
+      "
+    networks:
+      - crm-test-network
+    profiles:
+      - test
+
+volumes:
+  mysql-test-data:
+    name: crm-mysql-test-data
+
+networks:
+  crm-test-network:
+    driver: bridge
