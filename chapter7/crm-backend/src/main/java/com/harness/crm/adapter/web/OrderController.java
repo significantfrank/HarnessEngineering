@@ -2,7 +2,10 @@ package com.harness.crm.adapter.web;
 
 import com.harness.crm.adapter.web.common.ApiResponse;
 import com.harness.crm.app.order.OrderService;
+import com.harness.crm.app.order.LegacyOrderService;
+import com.harness.crm.app.order.dto.LegacyOrderDTO;
 import com.harness.crm.app.order.dto.OrderDTO;
+import com.harness.crm.app.order.dto.OrderResult;
 import com.harness.crm.domain.order.enums.OrderStatus;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +26,8 @@ import org.springframework.web.bind.annotation.RestController;
 public class OrderController {
 
     private final OrderService orderService;
+
+    private final LegacyOrderService legacyOrderService;
 
     @PostMapping
     public ApiResponse<OrderDTO> create(@Valid @RequestBody OrderDTO dto) {
@@ -54,5 +59,10 @@ public class OrderController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         return ApiResponse.success(orderService.findByConditions(orderNo, status, customerId, opportunityId, page, size));
+    }
+
+    @PostMapping("/process")
+    public ApiResponse<LegacyOrderDTO> process(@RequestBody LegacyOrderDTO dto) {
+        return ApiResponse.success(legacyOrderService.processOrder(dto));
     }
 }
