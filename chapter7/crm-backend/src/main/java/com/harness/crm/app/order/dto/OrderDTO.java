@@ -29,6 +29,12 @@ public class OrderDTO {
     @NotNull(message = "订单金额不能为空")
     private BigDecimal totalAmount;
 
+    private String email;
+
+    private String customerLevel;
+
+    private String productType;
+
     private OrderStatus status;
 
     private String ownerName;

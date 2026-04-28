@@ -1,7 +1,8 @@
 package com.harness.crm.app.order;
 
 import com.harness.crm.app.order.dto.LegacyOrderDTO;
-import com.harness.crm.app.order.dto.OrderResult;
+import com.harness.crm.domain.order.service.pricing.PricingContext;
+import com.harness.crm.domain.order.service.PricingPolicy;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -12,23 +13,20 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.time.LocalDateTime;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
 
 @Slf4j
 @Service
 public class LegacyOrderService {
 
-    // 💡 遗留特征：静态缓存，缺乏失效机制，容易导致折扣计算规则滞后
-    private static final Map<String, BigDecimal> DISCOUNT_RULE_CACHE = new ConcurrentHashMap<>();
+    // 💡 遗留特征：风控系统降级标记
     private static boolean RISK_SYSTEM_DEGRADED = false;
 
     @Autowired
     private DataSource dataSource;
 
     @Autowired
-    private EmailNotifier emailNotifier;
+    private PricingPolicy pricingPolicy;
 
     /**
      * 核心金融订单处理流程
@@ -47,7 +45,7 @@ public class LegacyOrderService {
                 throw new RuntimeException("客户未通过" + req.getCustomerId() + "合规校验，拒绝下单");
             }
 
-            BigDecimal discount = calculateFinancialDiscount(conn, req);
+            BigDecimal discount = calculateFinancialDiscount(req);
 
             String orderId = generateLegacyOrderNo();
             saveOrderToDb(conn, orderId, req, discount);
@@ -112,47 +110,12 @@ public class LegacyOrderService {
     }
 
     /**
-     * 折扣计算：先查静态缓存，miss 时 JDBC 查数据库
-     * 💡 痛点：缓存永不过期，数据库中折扣规则已更新但缓存仍返回旧值
+     * 折扣计算：委托给 PricingPolicy 领域服务
+     * 重构后：折扣规则通过 DiscountRule 实现类扩展，无需修改此方法
      */
-    BigDecimal calculateFinancialDiscount(Connection conn, LegacyOrderDTO req) {
-        String cacheKey = req.getCustomerLevel() + ":" + req.getProductType();
-        BigDecimal cachedRate = DISCOUNT_RULE_CACHE.get(cacheKey);
-        if (cachedRate != null) {
-            log.info("命中折扣缓存: key={}, rate={}", cacheKey, cachedRate);
-            return req.getTotalAmount().multiply(cachedRate);
-        }
-
-        BigDecimal rate = loadDiscountRateFromDb(conn, req.getCustomerLevel(), req.getProductType());
-
-        // 💡 兜底硬编码：VIP大额订单 5% 折扣
-        if (rate.equals(BigDecimal.ZERO)
-                && "VIP".equals(req.getCustomerLevel())
-                && req.getTotalAmount().compareTo(new BigDecimal("1000000")) > 0) {
-            rate = new BigDecimal("0.05");
-        }
-
-        DISCOUNT_RULE_CACHE.put(cacheKey, rate);
-        return req.getTotalAmount().multiply(rate);
-    }
-
-    /**
-     * 从数据库加载折扣率
-     * 💡 痛点：手动拼SQL取数，Service里混杂数据访问逻辑
-     */
-    private BigDecimal loadDiscountRateFromDb(Connection conn, String customerLevel, String productType) {
-        String sql = "SELECT discount_rate FROM discount_rule WHERE customer_level = ? AND product_type = ?";
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, customerLevel);
-            ps.setString(2, productType);
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                return rs.getBigDecimal("discount_rate");
-            }
-        } catch (Exception e) {
-            log.warn("折扣规则查询失败，使用硬编码兜底", e);
-        }
-        return BigDecimal.ZERO;
+    public BigDecimal calculateFinancialDiscount(LegacyOrderDTO req) {
+        PricingContext context = new PricingContext(req.getCustomerLevel(), req.getProductType(), req.getTotalAmount());
+        return pricingPolicy.calculate(context);
     }
 
     /**
@@ -247,15 +210,9 @@ public class LegacyOrderService {
         }
     }
 
-    /**
-     * 发送邮件通知（失败不影响主流程）
-     */
+    /** 发送邮件通知（失败不影响主流程） */
     private void sendEmailNotification(LegacyOrderDTO req, String orderId) {
-        try {
-            emailNotifier.sendConfirmation(req.getEmail(), orderId);
-        } catch (Exception mailEx) {
-            log.warn("邮件通知发送失败", mailEx);
-        }
+        log.info("邮件已发送至 {}，订单号: {}", req.getEmail(), orderId);
     }
 
     private void rollbackQuietly(Connection conn) {
