@@ -2,7 +2,7 @@
 
 echo "Running mvn checkstyle:check..."
 
-cd chapter7/crm-backend && mvn checkstyle:check
+cd chapter8/crm-backend && mvn checkstyle:check
 
 if [ $? -ne 0 ]; then
     echo "Checkstyle check failed. Please fix the issues before committing."

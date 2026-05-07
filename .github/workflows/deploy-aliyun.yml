@@ -23,7 +23,7 @@ jobs:
       - name: Build and push crm-backend
         uses: docker/build-push-action@v6
         with:
-          context: ./chapter7/crm-backend
+          context: ./chapter8/crm-backend
           push: true
           tags: |
             ${{ secrets.ACR_REGISTRY }}/crm-backend:latest
@@ -32,7 +32,7 @@ jobs:
       - name: Build and push customer-center
         uses: docker/build-push-action@v6
         with:
-          context: ./chapter6/customer-center
+          context: ./chapter7/customer-center
           push: true
           tags: |
             ${{ secrets.ACR_REGISTRY }}/customer-center:latest
@@ -41,7 +41,7 @@ jobs:
       - name: Build and push crm-frontend
         uses: docker/build-push-action@v6
         with:
-          context: ./chapter7/crm-frontend
+          context: ./chapter8/crm-frontend
           push: true
           tags: |
             ${{ secrets.ACR_REGISTRY }}/crm-frontend:latest

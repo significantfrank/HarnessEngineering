@@ -3,10 +3,10 @@ name: CRM Backend Unit Test
 on:
   push:
     paths:
-      - 'chapter7/crm-backend/**'
+      - 'chapter8/crm-backend/**'
   pull_request:
     paths:
-      - 'chapter7/crm-backend/**'
+      - 'chapter8/crm-backend/**'
 
 jobs:
   test:
@@ -25,9 +25,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.m2
-          key: ${{ runner.os }}-m2-${{ hashFiles('chapter7/crm-backend/pom.xml') }}
+          key: ${{ runner.os }}-m2-${{ hashFiles('chapter8/crm-backend/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
 
       - name: Run mvn test
         run: mvn test
-        working-directory: chapter7/crm-backend
+        working-directory: chapter8/crm-backend

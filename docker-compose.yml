@@ -29,7 +29,7 @@ services:
 
   crm-backend:
     build:
-      context: ./chapter7/crm-backend
+      context: ./chapter8/crm-backend
       dockerfile: Dockerfile
     container_name: crm-backend-test
     ports:
@@ -56,7 +56,7 @@ services:
 
   customer-center:
     build:
-      context: ./chapter6/customer-center
+      context: ./chapter7/customer-center
       dockerfile: Dockerfile
     container_name: customer-center-test
     ports:
@@ -82,7 +82,7 @@ services:
 
   frontend:
     build:
-      context: ./chapter7/crm-frontend
+      context: ./chapter8/crm-frontend
       dockerfile: Dockerfile
     container_name: crm-frontend-test
     ports:
