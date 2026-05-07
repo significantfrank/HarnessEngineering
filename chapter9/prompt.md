@@ -25,7 +25,7 @@ description: "运行从页面开始的端到端测试"
    若 8080 端口在线，kill原进程。重新拉起：
    `powershell -Command "Start-Process cmd -ArgumentList '/k cd chapter8/crm-backend && mvn spring-boot:run -Dserver.port=8080'"`
    若 8081 端口在线，kill原进程。重新拉起：
-   `powershell -Command "Start-Process cmd -ArgumentList '/k cd chapter7/customer-center && mvn spring-boot:run -Dserver.port=8080'"`
+   `powershell -Command "Start-Process cmd -ArgumentList '/k cd chapter7/customer-center && mvn spring-boot:run -Dserver.port=8081'"`
 
 
 2. **前端动态挂载**：
