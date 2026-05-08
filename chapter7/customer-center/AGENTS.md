@@ -10,7 +10,7 @@ customer center service for Bank.
 Dev server port: **8081** (not the default 8080).
 
 ### Coding
-业务代码添加必要的中文注释
+对于复杂业务代码添加必要的中文注释
 
 ### COLA DDD Package Structure
 
