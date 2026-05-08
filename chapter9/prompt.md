@@ -69,6 +69,6 @@ description: "运行从页面开始的端到端测试"
 description: "运行从页面开始端到端测试"
 ---
 
-1. 先进行环境清理，运行命令：docker-compose down -v
-2. 在执行容器化的端到端测试：docker-compose --profile test up
+1. 先进行环境清理，运行命令：docker compose down -v
+2. 在执行容器化的端到端测试：docker compose --profile test up
 ```
