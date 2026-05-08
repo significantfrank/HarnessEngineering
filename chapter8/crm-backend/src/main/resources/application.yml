@@ -8,6 +8,7 @@ spring:
     properties:
       hibernate:
         format_sql: true
+        dialect: org.hibernate.dialect.MySQL8Dialect
   jackson:
     date-format: yyyy-MM-dd HH:mm:ss
     time-zone: GMT+8
