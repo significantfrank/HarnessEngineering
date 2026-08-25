@@ -1,0 +1,21 @@
+{
+  "name": "plugin-interface-demo",
+  "version": "1.0.0",
+  "description": "基于接口契约的插件 demo（拉模式）",
+  "type": "module",
+  "main": "dist/main.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "tsc && node dist/main.js",
+    "clean": "rm -rf dist node_modules"
+  },
+  "keywords": [
+    "plugin",
+    "interface",
+    "typescript"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}

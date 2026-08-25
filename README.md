@@ -15,6 +15,7 @@ HarnessEngineering/
 ├── chapter8/          全栈 CRM 应用 — Vue 3 + Spring Boot + COLA DDD
 ├── chapter9/          测试策略 — WireMock 重构与 E2E 自动化
 ├── chapter10/         领域驱动重构 — 遗留代码的 DDD 改造
+├── deepseek-harness/  dsh技术深度解析
 ├── e2e-tests/         Playwright E2E 测试套件
 ├── .github/workflows/ GitHub Actions CI/CD 流水线
 ├── docker-compose.yml       本地开发环境

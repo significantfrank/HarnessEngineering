@@ -1,0 +1,17 @@
+{
+  "name": "plugin-hook-demo",
+  "version": "1.0.0",
+  "description": "基于事件钩子的插件 demo（推模式）",
+  "type": "module",
+  "main": "dist/main.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "tsc && node dist/main.js",
+    "clean": "rm -rf dist node_modules"
+  },
+  "keywords": ["plugin", "hook", "event", "typescript"],
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}
