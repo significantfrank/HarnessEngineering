@@ -1,0 +1,19 @@
+{
+  "name": "cordis-demo-ts",
+  "version": "1.0.0",
+  "description": "Cordis 插件框架核心机制的从零实现 demo（反应式依赖注入 + 可逆副作用）",
+  "type": "module",
+  "exports": {
+    ".": "./src/cordis.ts"
+  },
+  "scripts": {
+    "start": "node --experimental-strip-types index.ts",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist node_modules"
+  },
+  "keywords": ["cordis", "plugin", "di", "reactive", "typescript"],
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}

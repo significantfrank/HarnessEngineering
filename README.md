@@ -1,10 +1,10 @@
 # HarnessEngineering
 
-AI 辅助软件工程实战 — 从 AI Agent 基础到全栈 CRM 应用的渐进式工程实践。
+[《Harness工程实战》](https://item.jd.com/10233699155932.html) — 从 AI Agent 基础到全栈 CRM 应用的渐进式工程实践。
 
 ## 项目概览
 
-本项目是一本 AI 辅助软件工程书籍的配套代码仓库，按章节组织，循序渐进地构建从 AI Agent 基础到生产级全栈 CRM 应用的完整工程体系。
+本项目是[《Harness工程实战》](https://item.jd.com/10233699155932.html) 书籍的配套代码仓库，按章节组织，循序渐进地构建从 AI Agent 基础到生产级全栈 CRM 应用的完整工程体系。
 
 ```
 HarnessEngineering/
