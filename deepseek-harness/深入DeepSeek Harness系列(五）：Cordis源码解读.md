@@ -1,15 +1,11 @@
-> 本文是「论文解读」系列的配套实践篇。论文解读从理论上剖析了 Cordis（DeepSeek Harness 之下的插件框架）的反应式依赖注入与可逆副作用；本文则把这些理念落到一个约 450 行的从零实现 `[cordis-demo](../src/cordis.ts)` 上，逐行回答四个"为什么"。
->
+上一篇我们介绍了Cordis的工作原理，本文将通过[cordis-demo](https://github.com/significantfrank/HarnessEngineering/tree/main/deepseek-harness/cordis-demo)，结合源码，讲解理论背后的实现，主要回答下面四个问题：
 
-1. 插件可以是函数 / 类 / `{ apply }` 对象（或导出 `apply` 的模块）；
-2. Context 是服务的仓库，服务按稳定的 `ctx.<name>` 暴露，按名查找而非 import；
-3. `inject` 声明服务依赖，插件在所有必需服务就绪后才会启动——加载顺序由依赖表达；
-4. 事件（`ctx.on` / `ctx.emit`）让插件间通信；
-5. 注册是可逆副作用（`ctx.effect`），卸载时按注册逆序回退。
+1. 为什么插件可以是函数 / 类 / 对象？
+2. 为什么Context可以动态挂载新的service？
+3. 反应式余效应是如何实现的？
+4. 可逆副作用是如何实现的？
 
-
-
-下面四个小节，每个都对应一个设计问题，并直接贴出 `src/cordis.ts` 的源码来回答。
+下面四个小节分别对应这四个问题，我们将结合源码进行解读。
 
 # 为什么可以支持三种形态的插件？
 Corids可以支持三种形态之一：
@@ -68,7 +64,7 @@ export interface PluginObject<T = any> extends PluginBase<T> {
 在 TypeScript 中，`type`（类型别名）和 `interface`（接口）是定义类型的两种核心方式。区别是`interface` 可以自动合并和extends，但是type只能通过 `|` 和 `&` 进行联合，通常用于类型联合。
 
 # 为什么可以在context上挂载新的service？
-这主要得益于TypeScript的 `interface` 自动合并（Auto Merge）功能，以及TypeScript的声明合并（Module Augmentation）。
+这主要得益于TypeScript的 `interface` 自动合并（Auto Merge）功能，以及TypeScript的声明合并（Declare Module Augmentation）。
 
 所谓的自动合并，就是如果`interface` 的名称相同，其属性会被自动合并：
 
@@ -100,19 +96,19 @@ declare module 'cordis-demo-ts' {
 }
 ```
 
-关于这个功能，在 [dhs tutorial](https://deepseek-harness.github.io/deepseek-harness/develop/cordis-tutorial/)中也有提到，其特别说明：**声明合并**（`declare module '@deepseek-ai/cordis' { ... }`）会为 Cordis 已经声明的接口添加你的条目，例如新 `ctx.greeter` 属性的类型或事件名称。
+关于这个功能，在 [dhs tutorial](https://deepseek-harness.github.io/deepseek-harness/develop/cordis-tutorial/)中也有提到，**声明合并**（`declare module '@deepseek-ai/cordis' { ... }`）会为 Cordis 已经声明的接口添加你的条目，例如新 `ctx.greeter` 属性的类型或事件名称。
 
-以上是给Context在类型上增加了`ctx.logger`, 从而让其它TS程序可以在编译时看见`ctx.logger`，真正在运行时能通过`ctx.logger`取到Service实例。真正挂载是 `Service` 构造调 `ctx._provide`里的 `Object.defineProperty(this.root, name, ...)` 在根 context 上定义自有属性。
+以上是给Context在类型上增加了`ctx.logger`, 从而让其它TS程序可以在编译时看见`ctx.logger`。然而，运行时能通过`ctx.logger`取到Service实例。还是要通过 `Service` 构造过程中，调用 `ctx._provide`里的 `Object.defineProperty(this.root, name, ...)` ，从而在根 context 上加载定义自有属性，才能获得。
 
 # 反应式余效应是如何实现的？
 在论文解读中，我们提到cordis的依赖注入（Dependency Injection）是做到了反应式（Reactive），**运行期间 dependency graph 一旦改变，组件生命周期自动发生变化。**
 
-这种响应式是如何实现的呢？主要是通过`inject`, 以我们的demo为例，在greeter插件中有这样的声明`greeter.inject = ['logger']` , 表示greeter插件是依赖logger插件的，按照论文要求，被依赖的插件需要响应式的影响依赖插件。
+这种响应式是如何实现的呢？主要是通过`inject`, 以我们的cordis-demo为例，在greeter插件中有这样的声明`greeter.inject = ['logger']` , 表示greeter插件是依赖logger插件的，按照论文要求，被依赖的插件需要响应式的影响依赖插件。
 
-greeter 之所以能被“唤醒”，是三件事配合的结果：**依赖靠 **`inject`** 声明**、**服务一注册就触发对所有 PENDING 纤程的重新评估**、`_getImpl`** 从根服务表里查依赖是否就绪**。logger 自注册服务的那一下，就是那个“触发点”。其完整步骤如下：
+greeter 之所以能被“唤醒”，是三件事配合的结果：依赖靠 `inject`声明、服务一注册就触发对所有 PENDING 纤程的重新评估、 `_getImpl` 从根服务表里查依赖是否就绪。logger 自注册服务的那一下，就是那个“触发点”。其完整步骤如下：
 
 ## 1）第一步：greeter 挂上时为什么是 PENDING
-当greeter首先被加载的时候，我们会得到一个PENDING状态的greeter，因为此时logger还没有被加载，
+当greeter首先被加载的时候，我们会得到一个PENDING状态的greeter，因为此时logger还没有被加载
 
 ```typescript
 _refresh(): void {
@@ -140,7 +136,7 @@ _getImpl(name: string): any {
 ## 2）第二步：logger 挂上 → 自注册服务 → 触发唤醒
 `ctx.plugin(LoggerService)` → 又一个 `new Fiber(...)`。它的 `_refresh()` 这次 `ready=true`（logger 没有 `inject`，循环为空），于是调 `_start()`
 
-`_start()`（`:206`）**第一句**就把状态翻成 `LOADING`：
+`_start()`**第一句**就把状态翻成 `LOADING`：
 
 ```typescript
 _start(): void {
@@ -185,7 +181,7 @@ _refreshDependents(): void {
 }
 ```
 
-此刻表里是 `[greeter, logger]`, **greeter** 还是 `PENDING` → 调 `greeter._refresh()`, 这次 `_getImpl('logger')`（`:319`）返回的是**刚才 **`_provide`** 写进根服务表的 logger 实例**（`:325`），`impl` 真值 → `ready=true` → `this._start()`。**greeter 变 ACTIVE**。
+此刻表里是 `[greeter, logger]`, **greeter** 还是 `PENDING` → 调 `greeter._refresh()`, 这次 `_getImpl('logger')`返回的是刚才 `_provide`写进根服务表的 logger 实例，`impl` 真值 → `ready=true` → `this._start()`。**greeter 变 ACTIVE**。
 
 # 可逆副作用是如何实现的？
 每注册一个副作用（Effect）时，**立刻做“正事”**，同时把它返回的**撤销函数（disposer）压进一个栈**；fiber 卸载时，这个栈被**倒序排空**、每个撤销函数被 `await` 执行。于是 teardown 永远按 setup 的逆序可预测地回退。这就是“可逆”的含义。
@@ -296,18 +292,23 @@ context在通过on注册的事件代码如下，其正是利用`ctx.effect`的�
 所以，事件监听器**不需要单独的清理机制**，它是框架在通过`ctx.on` 注册实践监听器的时候，复用了 `ctx.effect`进行监听器删除动作，于是监听器随所属 fiber 卸载自动摘除，这是Corids框架已经帮我们做好了的。
 
 # 小结：四件事其实是同一件事
-回头看这四节，它们并不是孤立的小技巧，而是同一个理念的四个切面：
+回头看这四节，它们并不是孤立的小技巧，而是**一切皆插件**理念的四个切面：
 
 + **插件三态**用联合类型 + `invokePlugin`/`isClass` 分发，让"怎么写插件"变得自由；
 + **服务挂载**用声明合并（类型层）+ `_provide` 的 `Object.defineProperty`（运行时层），让 `ctx.logger` 既类型安全又真实可用；
 + **反应式依赖**用 `inject` 声明 + `_provide` 触发 `_refreshDependents` + `_getImpl` 查表，让"依赖一就绪，等待者自动启动"，加载顺序由依赖图而非调用顺序决定；
-+ **可逆副作用**用 `ctx.effect` 立即执行正事、把 disposer 压栈，卸载时 `drain()` 倒序排空，让 teardown 永远是 setup 的精确逆序——而 `ctx.on` 也只是复用了这条回路。  
-  把它们串起来，就是论文里那句话的落地：**运行期间 dependency graph 一旦改变，组件生命周期自动发生变化，且一切注册都可逆回退。** Doris 只用约 450 行就把这条链路跑通；生产级 Cordis 在此之上还加了反射代理、isolate 作用域、epoch 与异步重载/卸载等机制，但"心脏"就是这些。
++ **可逆副作用**用 `ctx.effect` 立即执行正事、把 disposer 压栈，卸载时 `drain()` 倒序排空，让 teardown 永远是 setup 的精确逆序——而 `ctx.on` 也只是复用了这条回路。
 
-想跑一遍看效果，直接：
+把它们串起来，就是论文里那句话的落地：**运行期间 dependency graph 一旦改变，组件生命周期自动发生变化，且一切注册都可逆回退。** 我们的doris-demo只用约 450 行就把这条链路跑通；生产级 Cordis 在此之上还加了反射代理、isolate 作用域、epoch 与异步重载/卸载等机制，但"心脏"就是这些。
+
+想跑一遍看效果，可以运行：
 
 ```bash
 node --experimental-strip-types index.ts
 ```
 
 你会看到 `greeter state right after mount: pending` → `active` → `disposed` 的完整生命周期，以及 timer、事件监听器在 `ctx.dispose()` 时按逆序回退的全过程。
+
+完整代码请在 https://github.com/significantfrank/HarnessEngineering/tree/main/deepseek-harness/cordis-demo 查看
+
+如果觉得本文对你有帮助，请支持我的新书[《Harness工程实战》](https://item.jd.com/10233699155932.html)

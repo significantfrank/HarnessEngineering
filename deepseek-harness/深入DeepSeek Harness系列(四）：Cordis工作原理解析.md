@@ -1,6 +1,9 @@
-**Cordis 是一个“元框架 (Meta-Framework)”**，即一个用于构建框架的框架。它的核心价值在于为解决软件“动态组合”问题提供了一套通用的、形式化的解决方案。你可以把它理解为一个极其灵活的“乐高底板”，让系统的各个部件能安全地即插即。
 
-Cordis 的设计哲学建立在同名论文[《A Programming Paradigm for Spatiotemporal Composability》](https://github.com/cordiverse/paper)提出的理论基础之上。它将复杂的动态组合问题拆解为两个正交的维度：
+前面几篇我们介绍了一切皆插件的相关理论知识，理论还要联系实际，接下来，我们看看理论背后的实现是如何做的。 我们先从**Cordis 是一个元框架 (Meta-Framework)** 开始。
+
+Cordis是一个用于构建框架的框架。它的核心价值在于为解决软件“动态组合”问题提供了一套通用的、形式化的解决方案。你可以把它理解为一个极其灵活的“乐高底板”，让系统的各个部件能安全地即插即用。
+
+其设计哲学建立在同名论文[《A Programming Paradigm for Spatiotemporal Composability》](https://github.com/cordiverse/paper)提出的理论基础之上。它将复杂的动态组合问题拆解为两个正交的维度：
 
 + **时间可组合性 (Temporal Composability)**：确保当一个组件被卸载时，它对系统产生的所有副作用（如注册事件、修改状态等）都能被**完整、安全地撤销**。这解决了传统系统中组件难以“干净”卸载，导致内存泄漏和状态污染的问题。
 + **空间可组合性 (Spatial Composability)**：让组件能够声明自己依赖什么服务，而无需关心这些服务具体由谁提供、何时出现。框架会响应式地管理这些依赖关系，在依赖变化时自动调整组件状态。
@@ -12,13 +15,13 @@ Cordis 的设计哲学建立在同名论文[《A Programming Paradigm for Spatio
 + **上下文 (Context) 作为核心容器**：在 Cordis 中，`Context` 是一切的核心。它是一个服务容器，所有服务（如 `ctx.tools`、`ctx.llm`）都注册在上面。插件通过 `apply(ctx)` 函数获得其独立的上下文，并通过这个上下文与外界交互。
 + **类型化事件 (Typed Events) 用于通信**：服务之间通过类型安全的事件进行通信，支持 `emit`（观察）、`waterfall`（瀑布式包装）、`parallel`（并行）等多种分发模式。
 
-在上一篇中，我们介绍了论文的主要内容，这里我们会通过一个示例，介绍Cordis是如何践行论文的理论知识，并实现动态的插件生命周期管理的。
+在上一篇中，我们已经介绍了时空可组合性论文的主要内容，这里我们会通过一个示例，介绍 Cordis 是如何践行论文的理论知识，并实现动态的插件生命周期管理的。
 
 # 1. 一个完整的 Cordis 示例
-这个例子将展示如何创建和消费一个服务，并理解 Cordis 如何管理插件的生命周期。
+这个例子将展示如何创建和消费一个服务，并理解 Cordis 如何管理插件的生命周期。这个示例参考了[DSH官方plugin教程文档](https://github.com/deepseek-ai/deepseek-harness/blob/master/docs/cordis-tutorial/01-first-plugin.zh.md)
 
 ## 1.1 提供服务 (Provider)
-首先，我们创建一个提供“问候”服务的插件。在 `greeter.ts` 文件中：
+首先，我们创建一个提供“问候”服务的插件 `greeter.ts` ：
 
 ```typescript
 // greeter.ts
@@ -80,16 +83,16 @@ export function apply(ctx: Context) {
 - name: './consumer.ts'
 ```
 
-在项目根目录执行启动命令（具体命令取决于你的项目设置），你会在控制台看到输出：
+在项目根目录执行启动命令，具体执行方式可以参考[官方plugin教程文档](https://github.com/deepseek-ai/deepseek-harness/blob/master/docs/cordis-tutorial/01-first-plugin.zh.md)，你会在控制台看到输出：
 
 ```plain
 Hello, world!
 ```
 
-你可以尝试调换 `cordis.yml` 中两行的顺序再运行，结果是一样的。这是因为启动顺序是由依赖关系（`inject`）决定的，而不是配置文件中的顺序
+你可以尝试调换 `cordis.yml` 中两行的顺序再运行，结果是一样的。这是因为启动顺序是由依赖关系（`inject`）决定的，而不是配置文件中的顺序。
 
 # 2. Cordis对时空可组合性论文的实现
-上面的Cordis 示例，虽然简单。但**也体现了 Reactive Coeffects 的理论模型，需要依赖 Revertible Effects 机制才能正常工作**。
+上面的 Cordis 示例，虽然简单，但**也体现了 Reactive Coeffects 的理论模型，需要依赖 Revertible Effects 机制才能正常工作**。
 
 简单来说：**Reactive Coeffects 定义了“依赖规则”（如何感知变化），而 Revertible Effects 提供了“可逆性契约”（凡是我创建/修改的，我必能将其恢复原状）**。Cordis 的 `Context` 正是缝合这两者的运行时引擎。
 
@@ -100,9 +103,9 @@ Hello, world!
 
 + **代码体现**：`export const inject = ['greeter']` 明确声明了 `consumer` 插件依赖 `greeter` 服务。
 + **“Reactive”（反应式）的体现**：这个声明不仅是“启动时检查”，而是一个**持续的、活着的约束**。
-    - 如果 `greeter` 服务**尚未注册**，`consumer` 会进入等待状态（不执行 `apply`）。
-    - 如果 `greeter` 服务在运行时**被卸载**（热重载或插件禁用），Cordis 会**自动感知**到这个变化，并立即将 `consumer` 标记为失效，触发其卸载流程。
-    - 如果 `greeter` 服务**重新注册**，`consumer` 会自动再次启动。
+  - 如果 `greeter` 服务**尚未注册**，`consumer` 会进入等待状态（不执行 `apply`）。
+  - 如果 `greeter` 服务在运行时**被卸载**（热重载或插件禁用），Cordis 会**自动感知**到这个变化，并立即将 `consumer` 标记为失效，触发其卸载流程。
+  - 如果 `greeter` 服务**重新注册**，`consumer` 会自动再次启动。
 
 **结论**：`inject` 声明将“依赖”从静态检查升级为**响应式信号**，这正是 Reactive Coeffects 在工程上的直接映射。
 
@@ -111,34 +114,35 @@ Hello, world!
 
 + **代码体现**：`ctx.plugin(GreeterService)` 这行代码并不仅仅是把类存进一个 Map。
 + **底层机制（Revertible Effects）**：Cordis 在底层会为这个注册操作**生成一个对应的“撤销函数”（Disposer）**。
-    - 撤销函数的具体内容：从 `ctx` 上删除 `greeter` 属性、清理该服务持有的所有事件监听器（`ctx.on`）、释放其占用的子上下文（Sub-context）资源。
-    - 这个撤销函数被存储在 `Context` 的“副作用栈”中，会按照LIFO的顺序进行撤销清理。
+  - 撤销函数的具体内容：从 `ctx` 上删除 `greeter` 属性、清理该服务持有的所有事件监听器（`ctx.on`）、释放其占用的子上下文（Sub-context）资源。
+  - 这个撤销函数被存储在 `Context` 的“副作用栈”中，会按照 LIFO 的顺序进行撤销清理。
 
 **结论**：`ctx.plugin` 操作之所以可以“撤销”，完全依赖于 **Revertible Effects** 机制。如果没有这个机制，`greeter` 服务将变成内存泄漏的源头，无法安全卸载。
 
 ## 2.3 运行时引擎`Context`（上下文）
 `Context` 是 Cordis 框架的核心。它并非简单的数据传递，而是扮演了**服务容器**和**生命周期管理器**的双重角色。
 
-1、**作为“服务容器”**
-
+1、**作为“服务容器”**  
 `Context` 就像一个运行时的**服务注册表**，是插件之间通信的枢纽。
 
 + **服务注册**：当一个插件（如 `GreeterService`）通过 `super(ctx, 'greeter')` 注册时，它的实例就被挂载到了 `ctx` 对象上，键名为 `'greeter'`。
 + **服务发现**：其他插件（如 `consumer`）不需要知道服务的具体实现来自哪个文件，只需要通过 `ctx.greeter` 来访问它。这种方式实现了**面向接口编程**，将服务的使用者与提供者彻底解耦
 
-2、**作为“生命周期管理器”**
-
+2、**作为“生命周期管理器”**  
 这是 `Context` 最具威力的地方，它让“可逆副作用”成为可能。
 
 + **资源追踪**：任何通过 `ctx` API 进行的操作，如 `ctx.plugin()`、`ctx.on()`（事件监听）或 `ctx.effect()`，都会被 `Context` 追踪。
 + **自动清理**：当插件被卸载时（例如，由于配置文件变更、热重载或依赖服务消失），其所属的 `Context` 会自动执行所有已注册资源的清理函数（disposer）。
 + **依赖驱动的生命周期**：这是 Cordis 动态性的精髓。当一个插件通过 `inject` 声明了对 `'greeter'` 的依赖后：
-    - **启动等待**：如果 `'greeter'` 服务尚未注册，该插件会进入 `PENDING` 状态，等待依赖就绪。
-    - **优雅降级**：如果在运行时，`'greeter'` 服务提供者被卸载或替换，所有依赖它的插件也会**自动进入pending状态**，并在服务恢复后重新加载。这避免了因持有无效引用而导致的程序错误。
+  - **启动等待**：如果 `'greeter'` 服务尚未注册，该插件会进入 `PENDING` 状态，等待依赖就绪。
+  - **优雅降级**：如果在运行时，`'greeter'` 服务提供者被卸载或替换，所有依赖它的插件也会**自动进入pending状态**，并在服务恢复后重新加载。这避免了因持有无效引用而导致的程序错误。
 
 总而言之，在 Cordis 中，`Context` 是一个**智能的、可组合的运行时环境**。它不仅是插件用来“提供”和“发现”服务的依赖注入容器，更是管理插件和资源生命周期的核心，通过 `inject` 和 `ctx.effect()` 等机制，实现了插件系统在运行时的**动态组合、热插拔与安全清理**
 
 ## 2.4 插件动态热加载/卸载
+![在这里插入图片描述](https://i-blog.csdnimg.cn/direct/0d7b68b62b654f45b9c9f0d0b7370c44.png)
+如上图所示，插件的动态热加载是通过以下步骤完成的：
+
 **1. 注册阶段（建立依赖）**  
 `greeter` 插件通过 `ctx.plugin(GreeterService)` 将服务注册到 **Context**。`consumer` 插件通过 `inject: ['greeter']` 声明**响应式余效应**，框架据此将两者绑定，确保 `apply` 执行时 `ctx.greeter` 已就绪。
 
@@ -149,3 +153,7 @@ Hello, world!
 **Context** 监测到 `greeter` 服务消失，立即根据 `consumer` 声明的 `inject` 依赖（**响应式余效应**）判定其前置条件失效。框架随即自动停用 `consumer` 插件，并执行其副作用清理（**可逆副作用**），确保没有残留逻辑引用已卸载的服务。
 
 系统通过 **Context** 统一调度，利用 **可逆副作用** 提供撤销执行力，利用 **响应式余效应** 触发级联停用，干净利落地完成了“卸载提供者、自动停用消费者”的安全收敛，无需开发者手动维护复杂的清理逻辑。
+
+下一篇中，我们将结合Cordis源码进一步研究其工作机制。
+
+如果觉得本文对你有帮助，请支持我的新书[《Harness工程实战》](https://item.jd.com/10233699155932.html)

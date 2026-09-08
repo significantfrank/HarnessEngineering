@@ -1,34 +1,37 @@
 [_A Programming Paradigm for Spatiotemporal Composability_](https://github.com/cordiverse/paper)  是和DeepSeek Harness一起发布的78页的学术论文。
 
-论文给出了"**软件如何在时间与空间两个维度上正确组合**"的范式，Cordis（论文作者实现的 meta-framework，提供 effect tracking 和 coeffect resolution 的核心库）是论文的参考实现，dsh 则在 Cordis 之上构建了一个"可被动态拆装、可热替换、可自我演化"的 AI Agent harness 的产品。
+论文给出了"**软件如何在时间与空间两个维度上正确组合**"的范式，Cordis是论文的参考实现，dsh 是基于Cordis 之上构建的一个"可被动态拆装、可热替换、可自我演化"的 AI Agent harness 产品。
 
-简单来说，你可以认为，dsh是论文的工程实践，论文是dsh的理论升华。
+简单来说，你可以认为，dsh是时空可组合性论文的工程实践，论文是dsh的理论升华。
 
 # 1. 别被 "Spatiotemporal" 吓到
 "Spatiotemporal" 是时空的意思，这玩意没那么高深，只是在学术论文里被拔高了，不要被唬到。需要注意的是，这里的时空**不是物理意义上的时空**，而是指动态软件系统中的两个核心问题维度：
 
-+ **时间维（Temporal）**：一个组件在 t1 被加入系统、在 t2 被移除时，它之前造成的所有影响能不能正确撤销？这由 **Revertible Effects（可逆副作用）** 解决。
-+ **空间维（Spatial）**：在同一时刻，组件 A、B、C 之间存在怎样的依赖拓扑？当拓扑变化时系统怎么办？ 这由 **Reactive Coeffects（反应式余效应）** 解决。
++ **时间维（Temporal）**：一个组件在 t1 被加入系统、在 t2 被移除时，它之前造成的所有影响能不能正确撤销？这由 **Temporal composability（时间可组合性）** 解决。
+
++ **空间维（Spatial）**：在同一时刻，组件 A、B、C 之间存在怎样的依赖拓扑？当拓扑变化时系统怎么办？ 这由 **Spatial composability（空间可组合性）** 解决。
 
 # 2. Revertible Effects（可逆副作用）
 **Temporal composability（时间可组合性）** 的关键是 **Revertible Effects（可逆副作用）**
 
-在函数式编程的语境下，Effect可以理解为Side Effect（副作用）的缩写，在编程中指的是：**一个函数或表达式在完成其主要任务（返回值）之外，还修改了外部环境的状态，或与外部世界发生了交互**。要理解函数的副作用，首先要对比纯函数（无副作用）：
+在函数式编程的语境下，Effect可以理解为Side Effect（副作用）的缩写，在编程中指的是：**一个函数或表达式在完成其主要任务（返回值）之外，还修改了外部环境的状态，或与外部世界发生了交互**。要理解函数的副作用，首先要对比纯函数（无副作用）和 副作用函数：
 
 + **纯函数**：给定相同的输入，永远返回相同的输出，并且**不**修改任何外部状态。例如 `function add(a,b){ return a + b }`。
-+ **有副作用函数**：函数不仅返回了值，还偷偷干了别的事（改数据、发请求、打日志等）。
++ **有副作用函数**：函数不仅返回了值，还偷偷干了别的事（改全局变量、发请求、写数据库等）。
 
-那么在dhs的语境下，副作用主要是指插件的可撤销性。即你要在时序上满足**Revertible Effects（可逆副作用）**。通俗的说，就是在组件（或者叫插件）卸载的时候，要撤销组件安装过程中造成的所有副作用。
+所以，我们平时倡导的函数参数要尽量是不可变的（immutable），就是在尽量消除副作用，减少函数改变外部状态的机会。
+
+那么在dhs的语境下，副作用主要是指插件的可撤销性。即你要在时序上满足**Revertible Effects（可逆副作用）**。通俗的讲，就是在组件（或者叫插件）卸载的时候，要撤销组件安装过程中造成的所有副作用。
 
 试想一下，windows系统安装软件的过程，他要复制 DLL 文件、写入注册表（`HKEY_LOCAL_MACHINE`）、创建 Windows 服务、修改环境变量 `PATH`等等。而卸载，需要按逆序执行所有撤销操作。理想情况是可以完全撤销，没有残留。但用过windows的人都知道，这有多难！
 
 dhs是如何解决这个难题的呢？
 
-按照论文的思想是：**每产生一个 effect，同时产生它的 inverse / disposer（撤销函数——effect 执行时同时返回的逆操作，卸载时反向调用）。**
+按照论文的思想是：**每产生一个 effect，同时产生它的 inverse / disposer（撤销函数——effect 执行时，同时返回的逆操作，卸载时反向调用）。**
 
 一个组件做了 e1（注册 listener）、e2（开 server）、e3（建 timer），就同时积累 undo(e1)、undo(e2)、undo(e3)。卸载时按相反顺序执行 undo(e3)→undo(e2)→undo(e1)，像一个**自动生成的 undo stack**。
 
-**这比 **`try/finally`** 高一个层次的原因**：可逆性具备组合性。如果 Plugin A 内嵌 B 内嵌 C，每一级 effect 都带 disposer，那么 `dispose(A)` 就能递归推出整个子树的清理序列，开发者不需要手写 stopA/stopB/stopC/removeX/clearY。"整个组件可撤销"由"原子操作可撤销 + 组合规则"推导出来——这是论文想要的代数性质。
+**这种可逆还要具备可组合性**。如果 Plugin A 内嵌 B 内嵌 C，每一级 effect 都带 disposer，那么 `dispose(A)` 就能递归推出整个子树的清理序列，开发者不需要手写 stopA/stopB/stopC/removeX/clearY。"整个组件可撤销"由"原子操作可撤销 + 组合规则"推导出来——这是论文想要的代数性质。
 
 # 3. Reactive Coeffects（反应式余效应）
 **Spatial composability（空间可组合性）** 的关键是 **Reactive Coeffects（反应式余效应）**
@@ -77,3 +80,7 @@ vectorDB 重新出现 → 重新 ACTIVE（自动激活）
 ```
 
 总的来说，`Context` 在论文提出的时空可组合新编程范式中，超越了传统“环境”的角色，成为一个**主动的、被严格形式化的核心编程抽象**。它将时间和空间两个维度的复杂性内聚于一身，并通过“可逆效应”和“响应式余效应”两套机制，为构建能够动态、安全、灵活组合的复杂系统（如插件系统、自进化AI框架）提供了理论基础。
+
+Cordis就是在这些理论知识上搭建的元框架，后续我们会深入解读Cordis原理及其源码。
+
+如果觉得本文对你有帮助，请支持我的新书[《Harness工程实战》](https://item.jd.com/10233699155932.html)
